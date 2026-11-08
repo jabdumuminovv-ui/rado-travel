@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TourHub Pro — Единая поисковая B2B/B2C система туроператоров Узбекистана</title>
+  <title>RaDo Travel — Единая поисковая система туроператоров Узбекистана</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <style>
@@ -32,7 +32,7 @@
         </div>
         <div>
           <div class="flex items-center space-x-2">
-            <span class="text-xl font-black tracking-tight text-white">TourHub <span class="text-amber-400">Pro</span></span>
+            <span class="text-xl font-black tracking-tight text-white">RaDo <span class="text-amber-400">Travel</span></span>
             <span id="headerModeBadge" class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">
               B2B АГЕНТСТВО
             </span>
@@ -419,11 +419,11 @@
   <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500 mt-auto">
     <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
       <div>
-        © 2026 <strong>TourHub Pro</strong>. Единая поисковая система туроператоров Узбекистана.
+        © 2026 <strong>RaDo Travel</strong>. Единая поисковая B2B/B2C система туроператоров Узбекистана.
       </div>
       <div class="flex items-center space-x-4">
         <span><i class="fa-solid fa-phone mr-1"></i> +998 (71) 200-00-00</span>
-        <span><i class="fa-brands fa-telegram mr-1"></i> @tourhub_uz</span>
+        <span><i class="fa-brands fa-telegram mr-1"></i> @radotravel</span>
       </div>
     </div>
   </footer>
@@ -886,7 +886,7 @@
         guestsStr += ` + ${children} дет.`;
       }
 
-      const text = `🌴 Готовое предложение по вашему запросу:
+      const text = `🌴 Готовое предложение по вашему запросу от RaDo Travel:
 
 🏨 Отель: ${tour.hotel_name} ${tour.hotel_stars}
 📍 Курорт: ${tour.resort || 'Курорт'}
@@ -905,7 +905,7 @@
 • Групповой трансфер аэропорт — отель — аэропорт
 • Медицинская страховка
 
-📩 Для бронирования напишите нам в ответ!`;
+📩 Для бронирования напишите в RaDo Travel!`;
 
       navigator.clipboard.writeText(text).then(() => {
         showToast("Предложение скопировано в буфер обмена! Готово для отправки в Telegram / WhatsApp.");

@@ -18,7 +18,7 @@ logging.basicConfig(
 logger = logging.getLogger("tour-aggregator")
 
 app = FastAPI(
-    title="TourHub Uzbekistan — Поиск и онлайн-бронирование туров",
+    title="RaDo Travel — Поиск и онлайн-бронирование туров",
     version="2.0.0",
     description="Единая поисковая система туров по всем надежным туроператорам Узбекистана"
 )
