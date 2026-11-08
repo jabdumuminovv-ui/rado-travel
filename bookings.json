@@ -1,0 +1,20 @@
+[
+  {
+    "client_name": "Тестовый Клиент (Аудит)",
+    "phone": "+998 90 999-88-77",
+    "telegram": "@test_client",
+    "hotel_name": "Rixos Premium Saadiyat Island",
+    "hotel_stars": "5*",
+    "resort": "Абу-Даби",
+    "checkin": "20.11.2026",
+    "nights": "7",
+    "meal_type": "UAI",
+    "room_type": "Deluxe Garden View",
+    "price": 3450.0,
+    "currency": "USD",
+    "operator_name": "Kompas Tour",
+    "notes": "Аудит системы перед запуском",
+    "booking_id": "TR-81FE5A",
+    "created_at": "2026-11-08T13:01:23.667976"
+  }
+]

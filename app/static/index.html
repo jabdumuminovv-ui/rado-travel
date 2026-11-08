@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TourHub Pro — Единая поисковая B2B/B2C система туроператоров Узбекистана</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .badge-kompas { background-color: #EEF2FF; color: #4338CA; border: 1px solid #C7D2FE; }
+    .badge-easybooking { background-color: #ECFDF5; color: #065F46; border: 1px solid #A7F3D0; }
+    .badge-selfietravel { background-color: #FAF5FF; color: #6B21A8; border: 1px solid #E9D5FF; }
+    .badge-kazunion { background-color: #FFFBEB; color: #92400E; border: 1px solid #FDE68A; }
+    .badge-flykhiva { background-color: #F0F9FF; color: #0369A1; border: 1px solid #BAE6FD; }
+    .badge-rightflight { background-color: #ECFEFF; color: #155E75; border: 1px solid #A5F3FC; }
+    .badge-malva { background-color: #FFF1F2; color: #9F1239; border: 1px solid #FECDD3; }
+    .badge-uzprestige { background-color: #F8FAFC; color: #334155; border: 1px solid #CBD5E1; }
+    .badge-crystalbay { background-color: #F0FDFA; color: #115E59; border: 1px solid #99F6E4; }
+    .badge-default { background-color: #F1F5F9; color: #475569; border: 1px solid #CBD5E1; }
+  </style>
+</head>
+<body class="bg-slate-100/70 text-slate-800 min-h-screen flex flex-col">
+
+  <!-- Шапка сайта -->
+  <header class="bg-slate-900 text-white border-b border-slate-800 shadow-sm sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 bg-gradient-to-tr from-amber-400 to-orange-500 rounded-xl flex items-center justify-center text-slate-950 font-black shadow-md text-xl">
+          <i class="fa-solid fa-plane-departure"></i>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="text-xl font-black tracking-tight text-white">TourHub <span class="text-amber-400">Pro</span></span>
+            <span id="headerModeBadge" class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">
+              B2B АГЕНТСТВО
+            </span>
+          </div>
+          <p class="text-xs text-slate-400">Единый метапоиск по 19+ туроператорам Узбекистана в реальном времени</p>
+        </div>
+      </div>
+
+      <!-- Переключатель B2B / B2C и Статус -->
+      <div class="flex items-center space-x-3 text-xs">
+        
+        <!-- Кнопка переключения режима B2B / B2C -->
+        <div class="bg-slate-800/90 p-1 rounded-xl border border-slate-700 flex items-center space-x-1">
+          <button type="button" id="modeBtnB2B" onclick="switchMode('b2b')" class="px-2.5 py-1.5 rounded-lg font-bold transition flex items-center space-x-1.5 bg-indigo-600 text-white shadow-sm">
+            <i class="fa-solid fa-briefcase"></i>
+            <span class="hidden sm:inline">B2B Агент</span>
+          </button>
+          <button type="button" id="modeBtnB2C" onclick="switchMode('b2c')" class="px-2.5 py-1.5 rounded-lg font-bold transition flex items-center space-x-1.5 text-slate-400 hover:text-white">
+            <i class="fa-solid fa-user"></i>
+            <span class="hidden sm:inline">B2C Турист</span>
+          </button>
+        </div>
+
+        <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-semibold text-[11px]">
+          <span class="w-2 h-2 mr-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          19 операторов
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Главный поисковый блок -->
+  <section class="bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-900 text-white pt-6 pb-10 px-4 shadow-lg">
+    <div class="max-w-7xl mx-auto">
+      
+      <div class="bg-white rounded-3xl p-5 md:p-6 shadow-2xl text-slate-800 border border-slate-100">
+        <form id="searchForm" class="space-y-4">
+          
+          <!-- Первая строка: Вылет из, Куда летим, ТУРОПЕРАТОР, Вылет от, Вылет до -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
+            
+            <!-- 1. Город вылета -->
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1.5"><i class="fa-solid fa-plane-departure text-indigo-600 mr-1"></i> Город вылета</label>
+              <select id="city_from" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                <option value="Ташкент" selected>🛫 Ташкент (TAS)</option>
+                <option value="Самарканд">🛫 Самарканд (SKD)</option>
+                <option value="Бухара">🛫 Бухара (BHK)</option>
+                <option value="Фергана">🛫 Фергана (FEG)</option>
+              </select>
+            </div>
+
+            <!-- 2. Страна назначения -->
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1.5"><i class="fa-solid fa-location-dot text-rose-500 mr-1"></i> Куда летим</label>
+              <select id="country" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                <option value="ОАЭ" selected>🇦🇪 ОАЭ (Дубай, Шарджа, Абу-Даби)</option>
+                <option value="Египет">🇪🇬 Египет (Шарм-эль-Шейх, Хургада)</option>
+                <option value="Турция">🇹🇷 Турция (Анталья, Бодрум, Стамбул)</option>
+                <option value="Мальдивы">🏝 Мальдивы</option>
+                <option value="Таиланд">🇹🇭 Таиланд (Пхукет, Паттайя)</option>
+                <option value="Вьетнам">🇻🇳 Вьетнам (Фукуок)</option>
+                <option value="Катар">🇶🇦 Катар (Доха)</option>
+                <option value="Малайзия">🇲🇾 Малайзия (Куала-Лумпур, Лангкави)</option>
+                <option value="Индонезия">🇮🇩 Индонезия (Бали)</option>
+                <option value="Грузия">🇬🇪 Грузия (Тбилиси, Батуми)</option>
+                <option value="Шри-Ланка">🇱🇰 Шри-Ланка</option>
+                <option value="Китай">🇨🇳 Китай (Хайнань)</option>
+                <option value="Оман">🇴🇲 Оман (Маскат)</option>
+              </select>
+            </div>
+
+            <!-- 3. ТУРОПЕРАТОР (Выбор конкретного оператора или сравнение всех) -->
+            <div>
+              <label class="block text-xs font-bold text-indigo-700 mb-1.5 flex items-center justify-between">
+                <span><i class="fa-solid fa-building text-indigo-600 mr-1"></i> Туроператор</span>
+                <span class="text-[10px] text-slate-400 font-normal">или сравнить всех</span>
+              </label>
+              <select id="selected_operator" class="w-full bg-indigo-50/50 border border-indigo-200 rounded-xl px-3 py-2.5 text-sm font-bold text-indigo-950 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                <option value="all" selected>🌟 Все туроператоры (Сравнить всех 19+)</option>
+                <option value="kompas">🏢 Kompas Tour (online.uz.kompastour.com)</option>
+                <option value="easybooking">🏢 EasyBooking (tours.easybooking.uz)</option>
+                <option value="selfietravel">🏢 Selfie Travel (b2b.selfietravel.kz)</option>
+                <option value="kazunion">🏢 Kazunion (online.kazunion.com)</option>
+                <option value="flykhiva">🏢 Fly Khiva (b2b.flykhiva.travel)</option>
+                <option value="rightflight">🏢 Right Flight (online.right-flight.org)</option>
+                <option value="malva">🏢 Malva Tour (malvatouroperator.uz)</option>
+                <option value="uzprestige">🏢 Uz-Prestige (online.uz-prestige.com)</option>
+                <option value="crystalbay">🏢 Crystal Bay (booking-uz.crystalbay.com)</option>
+                <option value="centrum">🏢 Centrum Holidays (online.centrum-holidays.com)</option>
+                <option value="asialuxe">🏢 Asialuxe Travel (b2b.asialuxe.uz)</option>
+                <option value="pegast">🏢 Pegas Touristik (uz.pegast.asia)</option>
+                <option value="enjoyfly">🏢 Enjoy Fly (b2b.enjoyfly.uz)</option>
+                <option value="delux">🏢 Delux Tur (b2bdeluxtur.com)</option>
+                <option value="atlas">🏢 Atlas Aviatour (atlasaviatour.uz)</option>
+                <option value="izel">🏢 Izel Booking (izelbooking.com)</option>
+                <option value="ratehawk">🏢 RateHawk (ratehawk.com)</option>
+                <option value="velikolepniy">🏢 Velikolepniy Vek (velikolepniy-vek.com)</option>
+              </select>
+            </div>
+
+            <!-- 4. Вылет от -->
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1.5"><i class="fa-regular fa-calendar text-indigo-600 mr-1"></i> Вылет от</label>
+              <input type="date" id="date_from" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+            </div>
+
+            <!-- 5. Вылет до -->
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1.5"><i class="fa-regular fa-calendar text-indigo-600 mr-1"></i> Вылет до</label>
+              <input type="date" id="date_to" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+            </div>
+
+          </div>
+
+          <!-- Вторая строка: Отель, Ночи, Взрослые, Дети, Кнопка поиска -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5 items-end">
+            
+            <!-- Конкретный отель / Сеть -->
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1.5"><i class="fa-solid fa-hotel text-amber-500 mr-1"></i> Отель / Сеть</label>
+              <input type="text" id="hotel_query" placeholder="Все отели (или введите Rixos)..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+            </div>
+
+            <!-- Ночей от и до -->
+            <div class="flex space-x-2">
+              <div class="w-1/2">
+                <label class="block text-xs font-bold text-slate-600 mb-1.5">Ночей от</label>
+                <select id="nights_from" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2.5 text-sm font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                  <option value="5">5</option>
+                  <option value="6">6</option>
+                  <option value="7" selected>7</option>
+                  <option value="8">8</option>
+                  <option value="9">9</option>
+                  <option value="10">10</option>
+                  <option value="12">12</option>
+                  <option value="14">14</option>
+                </select>
+              </div>
+              <div class="w-1/2">
+                <label class="block text-xs font-bold text-slate-600 mb-1.5">до</label>
+                <select id="nights_to" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2.5 text-sm font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                  <option value="5">5</option>
+                  <option value="6">6</option>
+                  <option value="7" selected>7</option>
+                  <option value="8">8</option>
+                  <option value="9">9</option>
+                  <option value="10">10</option>
+                  <option value="12">12</option>
+                  <option value="14">14</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Взрослые -->
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1.5"><i class="fa-solid fa-user text-indigo-600 mr-1"></i> Взрослых</label>
+              <select id="adults" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                <option value="1">1 взрослый</option>
+                <option value="2" selected>2 взрослых</option>
+                <option value="3">3 взрослых</option>
+                <option value="4">4 взрослых</option>
+                <option value="5">5 взрослых</option>
+              </select>
+            </div>
+
+            <!-- Дети (с выбором возраста) -->
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1.5"><i class="fa-solid fa-child text-amber-500 mr-1"></i> Детей</label>
+              <select id="children_count" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                <option value="0" selected>Без детей</option>
+                <option value="1">+ 1 ребенок</option>
+                <option value="2">+ 2 детей</option>
+                <option value="3">+ 3 детей</option>
+              </select>
+            </div>
+
+            <!-- Кнопка поиска -->
+            <div>
+              <button type="submit" id="searchBtn" class="w-full bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:to-orange-700 active:scale-[0.98] text-white py-3 px-4 rounded-xl font-black text-sm transition shadow-lg shadow-orange-500/30 flex items-center justify-center space-x-2">
+                <i class="fa-solid fa-magnifying-glass text-base"></i>
+                <span>Найти туры</span>
+              </button>
+            </div>
+
+          </div>
+
+          <!-- Блок возраста детей (появляется если указаны дети) -->
+          <div id="childAgesRow" class="hidden bg-amber-50/80 rounded-2xl p-3 border border-amber-200 flex flex-wrap items-center gap-3 text-xs">
+            <span class="font-bold text-amber-900"><i class="fa-solid fa-cake-candles mr-1.5 text-amber-600"></i> Точный возраст детей (для расчета скидки отеля и авиа):</span>
+            
+            <div id="childAgeBox1" class="hidden items-center space-x-1">
+              <span class="text-slate-600 font-medium">1-й ребенок:</span>
+              <select id="child_age_1" class="bg-white border border-slate-300 rounded-lg px-2 py-1 font-bold text-slate-800">
+                <option value="0">до 1 года (инфант)</option>
+                <option value="1">1 год</option>
+                <option value="2">2 года</option>
+                <option value="3">3 года</option>
+                <option value="4">4 года</option>
+                <option value="5">5 лет</option>
+                <option value="6" selected>6 лет</option>
+                <option value="7">7 лет</option>
+                <option value="8">8 лет</option>
+                <option value="9">9 лет</option>
+                <option value="10">10 лет</option>
+                <option value="11">11 лет</option>
+                <option value="12">12 лет</option>
+                <option value="13">13 лет</option>
+                <option value="14">14 лет</option>
+              </select>
+            </div>
+
+            <div id="childAgeBox2" class="hidden items-center space-x-1">
+              <span class="text-slate-600 font-medium">2-й ребенок:</span>
+              <select id="child_age_2" class="bg-white border border-slate-300 rounded-lg px-2 py-1 font-bold text-slate-800">
+                <option value="0">до 1 года</option>
+                <option value="2">2 года</option>
+                <option value="4">4 года</option>
+                <option value="6">6 лет</option>
+                <option value="8">8 лет</option>
+                <option value="9" selected>9 лет</option>
+                <option value="11">11 лет</option>
+                <option value="13">13 лет</option>
+              </select>
+            </div>
+
+            <div id="childAgeBox3" class="hidden items-center space-x-1">
+              <span class="text-slate-600 font-medium">3-й ребенок:</span>
+              <select id="child_age_3" class="bg-white border border-slate-300 rounded-lg px-2 py-1 font-bold text-slate-800">
+                <option value="2">2 года</option>
+                <option value="3" selected>3 года</option>
+                <option value="5">5 лет</option>
+                <option value="7">7 лет</option>
+                <option value="10">10 лет</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Нижняя панель фильтров: Сортировка, Места на рейсах, Наценка -->
+          <div class="pt-2 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div class="flex flex-wrap items-center gap-4">
+              
+              <!-- Сортировка цен -->
+              <div class="flex items-center space-x-1.5">
+                <span class="font-bold text-slate-500">Сортировка:</span>
+                <select id="sort_order" class="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 text-xs font-bold text-slate-700 focus:outline-none">
+                  <option value="price_asc" selected>🟢 Сначала дешевые (эконом)</option>
+                  <option value="price_desc">🟣 Сначала дорогие (VIP / Люкс)</option>
+                </select>
+              </div>
+
+              <!-- Только с местами на рейс -->
+              <label class="inline-flex items-center space-x-1.5 cursor-pointer font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
+                <input type="checkbox" id="only_available_flights" checked class="rounded text-emerald-600">
+                <span><i class="fa-solid fa-plane-circle-check text-emerald-600 mr-1"></i> Только с местами на рейс</span>
+              </label>
+
+            </div>
+
+            <!-- Наценка агентства (для B2C режима) -->
+            <div id="markupBox" class="flex items-center space-x-2 bg-slate-50 px-3 py-1 rounded-lg border border-slate-200">
+              <span class="font-bold text-slate-500"><i class="fa-solid fa-coins text-amber-500 mr-1"></i> Комиссия / Наценка:</span>
+              <select id="agencyMarkup" onchange="renderHotels(allHotelGroups)" class="bg-white border border-slate-300 rounded px-2 py-0.5 text-xs font-bold text-slate-800">
+                <option value="0" selected>0 $ (Чистая цена)</option>
+                <option value="30">+ 30 $</option>
+                <option value="50">+ 50 $</option>
+                <option value="100">+ 100 $</option>
+                <option value="5pct">+ 5%</option>
+                <option value="8pct">+ 8%</option>
+              </select>
+            </div>
+
+          </div>
+
+        </form>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Результаты поиска -->
+  <main class="max-w-7xl mx-auto px-4 py-8 flex-1 w-full">
+    
+    <!-- Панель статуса -->
+    <div id="statusBar" class="hidden mb-6 bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex flex-wrap items-center justify-between text-sm">
+      <div class="flex items-center space-x-3">
+        <div id="loadingSpinner" class="hidden w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+        <span id="statusText" class="font-medium text-slate-700">Идет поиск...</span>
+      </div>
+      <div id="statsBadges" class="text-xs text-slate-500 font-semibold"></div>
+    </div>
+
+    <!-- Быстрый фильтр туроператоров (Tabs/Pills) -->
+    <div id="operatorTabsBar" class="hidden mb-4 bg-white rounded-2xl p-3 border border-slate-200 shadow-sm flex flex-wrap items-center gap-2">
+      <span class="text-xs font-bold text-slate-500 mr-2"><i class="fa-solid fa-filter text-indigo-600 mr-1"></i> Фильтр по оператору:</span>
+      <div id="operatorTabsContainer" class="flex flex-wrap items-center gap-1.5">
+        <!-- Генерируется динамически -->
+      </div>
+    </div>
+
+    <!-- Быстрый фильтр отелей -->
+    <div id="resultFilterBar" class="hidden mb-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div class="relative w-full max-w-sm">
+        <i class="fa-solid fa-search absolute left-3.5 top-3 text-slate-400 text-xs"></i>
+        <input type="text" id="hotelFilterInput" placeholder="Быстрый поиск среди найденных отелей..." class="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none shadow-sm">
+      </div>
+      <div id="sortInfoLabel" class="text-xs text-slate-500 font-medium">
+        Цены за полный тур (перелет + отель + питание + трансфер) на всех туристов
+      </div>
+    </div>
+
+    <!-- Список отелей -->
+    <div id="hotelsList" class="space-y-6">
+      <div id="emptyState" class="bg-white rounded-3xl p-12 text-center border border-slate-200 shadow-sm">
+        <div class="w-16 h-16 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl shadow-inner">
+          <i class="fa-solid fa-umbrella-beach"></i>
+        </div>
+        <h3 class="text-lg font-bold text-slate-800 mb-1">Готовы к поиску и сравнению туров</h3>
+        <p class="text-sm text-slate-500 max-w-md mx-auto">
+          Выберите страну, оператора (или сравните всех сразу), укажите даты и нажмите <strong>«Найти туры»</strong>. Система мгновенно опросит базы операторов и выведет все доступные рейсы и тарифы.
+        </p>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Модальное окно: Заявка на бронирование (для B2C режима) -->
+  <div id="bookingModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 relative">
+      <button onclick="closeBookingModal()" class="absolute right-5 top-5 text-slate-400 hover:text-slate-600 text-lg">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div class="flex items-center space-x-3 mb-4">
+        <div class="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center text-lg font-bold">
+          <i class="fa-solid fa-passport"></i>
+        </div>
+        <div>
+          <h3 class="text-lg font-black text-slate-900">Бронирование тура</h3>
+          <p class="text-xs text-slate-500">Заполните контактные данные для оформления</p>
+        </div>
+      </div>
+
+      <div id="modalTourSummary" class="bg-slate-50 rounded-2xl p-3.5 mb-4 text-xs space-y-1.5 border border-slate-200">
+        <!-- Данные тура -->
+      </div>
+
+      <form id="bookingForm" onsubmit="submitBooking(event)" class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Имя и фамилия туриста *</label>
+          <input type="text" id="bk_client_name" required placeholder="Например: Азиз Каримов" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Телефон для связи *</label>
+          <input type="tel" id="bk_phone" required placeholder="+998 90 123-45-67" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Ник в Telegram (необязательно)</label>
+          <input type="text" id="bk_telegram" placeholder="@username" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Пожелания / Комментарий</label>
+          <textarea id="bk_notes" rows="2" placeholder="Номер с видом на море, раздельные кровати и т.д." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none"></textarea>
+        </div>
+
+        <button type="submit" id="bk_submit_btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl text-xs transition shadow-lg shadow-indigo-600/30 flex items-center justify-center space-x-2">
+          <i class="fa-solid fa-check"></i>
+          <span>Отправить заявку менеджеру</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Уведомление о копировании КП (Toast) -->
+  <div id="toast" class="fixed bottom-6 right-6 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center space-x-3 text-xs z-50 transform translate-y-24 transition duration-300">
+    <i class="fa-solid fa-circle-check text-emerald-400 text-base"></i>
+    <span id="toastMsg">Готовое предложение скопировано для отправки клиенту в Telegram!</span>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500 mt-auto">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div>
+        © 2026 <strong>TourHub Pro</strong>. Единая поисковая система туроператоров Узбекистана.
+      </div>
+      <div class="flex items-center space-x-4">
+        <span><i class="fa-solid fa-phone mr-1"></i> +998 (71) 200-00-00</span>
+        <span><i class="fa-brands fa-telegram mr-1"></i> @tourhub_uz</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Скрипт логики -->
+  <script>
+    // Текущий режим (b2b / b2c)
+    let currentMode = 'b2b';
+    let allHotelGroups = [];
+    let activeOperatorFilter = 'all';
+    let currentSelectedTour = null;
+
+    // Установка дат по умолчанию (+7 дней и +21 день)
+    const today = new Date();
+    const plus7 = new Date(today.getTime() + 6 * 24 * 60 * 60 * 1000);
+    const plus21 = new Date(today.getTime() + 20 * 24 * 60 * 60 * 1000);
+    
+    document.getElementById('date_from').value = plus7.toISOString().split('T')[0];
+    document.getElementById('date_to').value = plus21.toISOString().split('T')[0];
+
+    // Динамическое отображение полей возраста детей
+    document.getElementById('children_count').addEventListener('change', (e) => {
+      const count = parseInt(e.target.value);
+      const row = document.getElementById('childAgesRow');
+      const b1 = document.getElementById('childAgeBox1');
+      const b2 = document.getElementById('childAgeBox2');
+      const b3 = document.getElementById('childAgeBox3');
+
+      if (count > 0) {
+        row.classList.remove('hidden');
+        b1.classList.toggle('hidden', count < 1);
+        b1.classList.toggle('flex', count >= 1);
+        b2.classList.toggle('hidden', count < 2);
+        b2.classList.toggle('flex', count >= 2);
+        b3.classList.toggle('hidden', count < 3);
+        b3.classList.toggle('flex', count >= 3);
+      } else {
+        row.classList.add('hidden');
+      }
+    });
+
+    // Переключение B2B / B2C
+    function switchMode(mode) {
+      currentMode = mode;
+      const b2bBtn = document.getElementById('modeBtnB2B');
+      const b2cBtn = document.getElementById('modeBtnB2C');
+      const headerBadge = document.getElementById('headerModeBadge');
+
+      if (mode === 'b2b') {
+        b2bBtn.className = 'px-2.5 py-1.5 rounded-lg font-bold transition flex items-center space-x-1.5 bg-indigo-600 text-white shadow-sm';
+        b2cBtn.className = 'px-2.5 py-1.5 rounded-lg font-bold transition flex items-center space-x-1.5 text-slate-400 hover:text-white';
+        headerBadge.textContent = 'B2B АГЕНТСТВО';
+        headerBadge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-black bg-indigo-500/20 text-indigo-300 border border-indigo-400/30';
+      } else {
+        b2cBtn.className = 'px-2.5 py-1.5 rounded-lg font-bold transition flex items-center space-x-1.5 bg-emerald-600 text-white shadow-sm';
+        b2bBtn.className = 'px-2.5 py-1.5 rounded-lg font-bold transition flex items-center space-x-1.5 text-slate-400 hover:text-white';
+        headerBadge.textContent = 'B2C КЛИЕНТ';
+        headerBadge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+      }
+
+      renderHotels(allHotelGroups);
+    }
+
+    // Расчет цены с учетом наценки агентства
+    function calculateDisplayPrice(rawPrice) {
+      const markupVal = document.getElementById('agencyMarkup').value;
+      if (markupVal === '30') return rawPrice + 30;
+      if (markupVal === '50') return rawPrice + 50;
+      if (markupVal === '100') return rawPrice + 100;
+      if (markupVal === '5pct') return rawPrice * 1.05;
+      if (markupVal === '8pct') return rawPrice * 1.08;
+      return rawPrice;
+    }
+
+    // Класс цвета для бейджа оператора
+    function getOperatorBadgeClass(opName) {
+      const name = (opName || '').toLowerCase();
+      if (name.includes('kompas')) return 'badge-kompas';
+      if (name.includes('easy')) return 'badge-easybooking';
+      if (name.includes('selfie')) return 'badge-selfietravel';
+      if (name.includes('kazunion')) return 'badge-kazunion';
+      if (name.includes('khiva')) return 'badge-flykhiva';
+      if (name.includes('right')) return 'badge-rightflight';
+      if (name.includes('malva')) return 'badge-malva';
+      if (name.includes('prestige')) return 'badge-uzprestige';
+      if (name.includes('crystal')) return 'badge-crystalbay';
+      return 'badge-default';
+    }
+
+    // Поиск туров
+    document.getElementById('searchForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const cityFrom = document.getElementById('city_from').value;
+      const country = document.getElementById('country').value;
+      const selectedOperator = document.getElementById('selected_operator').value;
+      const hotelQuery = document.getElementById('hotel_query').value.trim();
+      const dateFromRaw = document.getElementById('date_from').value.split('-');
+      const dateToRaw = document.getElementById('date_to').value.split('-');
+
+      const checkinFrom = `${dateFromRaw[2]}.${dateFromRaw[1]}.${dateFromRaw[0]}`;
+      const checkinTo = `${dateToRaw[2]}.${dateToRaw[1]}.${dateToRaw[0]}`;
+
+      const nFrom = parseInt(document.getElementById('nights_from').value);
+      const nTo = parseInt(document.getElementById('nights_to').value);
+      const adults = parseInt(document.getElementById('adults').value);
+      const children = parseInt(document.getElementById('children_count').value);
+      
+      const childAges = [];
+      if (children >= 1) childAges.push(parseInt(document.getElementById('child_age_1').value));
+      if (children >= 2) childAges.push(parseInt(document.getElementById('child_age_2').value));
+      if (children >= 3) childAges.push(parseInt(document.getElementById('child_age_3').value));
+
+      const sortOrder = document.getElementById('sort_order').value;
+      const onlyAvailable = document.getElementById('only_available_flights').checked;
+
+      const payload = {
+        city_from: cityFrom,
+        country: country,
+        selected_operator: selectedOperator,
+        hotel_query: hotelQuery || null,
+        checkin_from: checkinFrom,
+        checkin_to: checkinTo,
+        nights_from: nFrom,
+        nights_to: nTo,
+        adults: adults,
+        children: children,
+        child_ages: childAges,
+        currency: "USD",
+        only_available_flights: onlyAvailable,
+        sort_order: sortOrder
+      };
+
+      const searchBtn = document.getElementById('searchBtn');
+      const statusBar = document.getElementById('statusBar');
+      const statusText = document.getElementById('statusText');
+      const spinner = document.getElementById('loadingSpinner');
+      const hotelsList = document.getElementById('hotelsList');
+      const resultFilterBar = document.getElementById('resultFilterBar');
+      const operatorTabsBar = document.getElementById('operatorTabsBar');
+
+      searchBtn.disabled = true;
+      searchBtn.classList.add('opacity-70');
+      statusBar.classList.remove('hidden');
+      spinner.classList.remove('hidden');
+
+      const opTitle = selectedOperator === 'all' ? 'всем 19+ операторам' : `оператору ${document.getElementById('selected_operator').options[document.getElementById('selected_operator').selectedIndex].text}`;
+      statusText.textContent = `Запрос к ${opTitle} (${payload.city_from} ➔ ${payload.country}${hotelQuery ? ' | ' + hotelQuery : ''})...`;
+
+      hotelsList.innerHTML = `
+        <div class="bg-white rounded-3xl p-12 text-center border border-slate-200 shadow-sm">
+          <div class="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p class="text-base font-bold text-slate-800">Идет поиск туров среди туроператоров Узбекистана...</p>
+          <p class="text-xs text-slate-400 mt-1">Параметры: ${adults} взр. ${children ? `+ ${children} дет.` : ''} | Даты: ${checkinFrom} - ${checkinTo} | Ночей: ${nFrom}-${nTo}</p>
+        </div>
+      `;
+
+      try {
+        const response = await fetch('/api/search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+        spinner.classList.add('hidden');
+        searchBtn.disabled = false;
+        searchBtn.classList.remove('opacity-70');
+
+        allHotelGroups = data.hotels || [];
+        activeOperatorFilter = 'all';
+
+        const opsList = data.operators_successful && data.operators_successful.length 
+          ? data.operators_successful.join(', ') 
+          : 'Оператор подключен';
+
+        statusText.innerHTML = `Найдено <strong>${data.total_hotels}</strong> отелей (всего <strong>${data.total_tours}</strong> вариантов) среди операторов: <span class="text-emerald-700 font-bold">${opsList}</span>`;
+        
+        resultFilterBar.classList.remove('hidden');
+        buildOperatorTabs(allHotelGroups);
+        renderHotels(allHotelGroups);
+
+      } catch (err) {
+        spinner.classList.add('hidden');
+        searchBtn.disabled = false;
+        searchBtn.classList.remove('opacity-70');
+        statusText.textContent = `Ошибка поиска: ${err.message}`;
+      }
+    });
+
+    // Построение вкладок-фильтров по туроператорам
+    function buildOperatorTabs(groups) {
+      const container = document.getElementById('operatorTabsContainer');
+      const bar = document.getElementById('operatorTabsBar');
+      
+      const opCounts = {};
+      let totalVariants = 0;
+
+      groups.forEach(g => {
+        g.tours.forEach(t => {
+          totalVariants++;
+          opCounts[t.operator_name] = (opCounts[t.operator_name] || 0) + 1;
+        });
+      });
+
+      const opNames = Object.keys(opCounts);
+      if (opNames.length === 0) {
+        bar.classList.add('hidden');
+        return;
+      }
+
+      bar.classList.remove('hidden');
+      let html = `
+        <button onclick="filterByOperator('all')" class="op-tab-btn px-3 py-1 rounded-xl text-xs font-bold transition ${activeOperatorFilter === 'all' ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">
+          Все операторы (${totalVariants})
+        </button>
+      `;
+
+      opNames.forEach(op => {
+        const count = opCounts[op];
+        const isAct = activeOperatorFilter === op;
+        html += `
+          <button onclick="filterByOperator('${op}')" class="op-tab-btn px-3 py-1 rounded-xl text-xs font-bold transition ${isAct ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">
+            ${op} (${count})
+          </button>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    function filterByOperator(opName) {
+      activeOperatorFilter = opName;
+      buildOperatorTabs(allHotelGroups);
+      renderHotels(allHotelGroups);
+    }
+
+    // Отрисовка списка отелей
+    function renderHotels(groups) {
+      const container = document.getElementById('hotelsList');
+      if (!groups || groups.length === 0) {
+        container.innerHTML = `
+          <div class="bg-white rounded-3xl p-10 text-center border border-slate-200 shadow-sm">
+            <p class="text-base font-bold text-slate-700">По выбранным параметрам туры не найдены.</p>
+            <p class="text-xs text-slate-400 mt-1">Попробуйте изменить даты, ночи или выберите «Все туроператоры».</p>
+          </div>
+        `;
+        return;
+      }
+
+      // Фильтрация по активному оператору (если выбран таб)
+      let displayGroups = groups;
+      if (activeOperatorFilter !== 'all') {
+        displayGroups = groups.map(g => {
+          const matchingTours = g.tours.filter(t => t.operator_name === activeOperatorFilter);
+          if (matchingTours.length === 0) return null;
+          return {
+            ...g,
+            variants_count: matchingTours.length,
+            min_price: Math.min(...matchingTours.map(t => t.price)),
+            max_price: Math.max(...matchingTours.map(t => t.price)),
+            tours: matchingTours
+          };
+        }).filter(Boolean);
+      }
+
+      if (displayGroups.length === 0) {
+        container.innerHTML = `
+          <div class="bg-white rounded-3xl p-10 text-center border border-slate-200 shadow-sm">
+            <p class="text-base font-bold text-slate-700">У оператора «${activeOperatorFilter}» нет туров по этим параметрам.</p>
+            <p class="text-xs text-slate-400 mt-1">Переключитесь на других операторов выше.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = displayGroups.map((g, idx) => {
+        const finalMinPrice = calculateDisplayPrice(g.min_price);
+        const approxUzs = Math.round(finalMinPrice * 12850).toLocaleString();
+
+        // Уникальные туроператоры, предлагающие этот отель
+        const hotelOperators = {};
+        g.tours.forEach(t => {
+          if (!hotelOperators[t.operator_name] || t.price < hotelOperators[t.operator_name]) {
+            hotelOperators[t.operator_name] = t.price;
+          }
+        });
+
+        const opBadgesHtml = Object.keys(hotelOperators).map(op => {
+          const p = Math.round(calculateDisplayPrice(hotelOperators[op]));
+          const badgeCls = getOperatorBadgeClass(op);
+          return `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-black ${badgeCls}">
+            <i class="fa-solid fa-building text-[10px] mr-1"></i>${op}: от $${p}
+          </span>`;
+        }).join(' ');
+
+        return `
+          <div class="bg-white rounded-3xl p-5 md:p-6 border border-slate-200 shadow-sm hover:shadow-md transition">
+            
+            <!-- Шапка отеля -->
+            <div class="flex flex-col md:flex-row md:items-center justify-between pb-4 border-b border-slate-100 gap-4">
+              <div class="flex items-start space-x-3.5">
+                <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center text-xl flex-shrink-0 shadow-inner">
+                  <i class="fa-solid fa-hotel"></i>
+                </div>
+                <div>
+                  <div class="flex flex-wrap items-center gap-2">
+                    <h3 class="text-lg font-black text-slate-900">${g.hotel_name}</h3>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 text-xs font-extrabold border border-amber-300">
+                      <i class="fa-solid fa-star text-amber-500 text-[10px] mr-1"></i>${g.hotel_stars}
+                    </span>
+                  </div>
+                  <div class="flex flex-wrap items-center gap-2 text-xs text-slate-500 mt-1 font-medium">
+                    <span><i class="fa-solid fa-location-dot text-rose-500 mr-1"></i>Курорт: <strong class="text-slate-800">${g.resort || 'Курорт'}</strong></span>
+                    <span class="text-slate-300">•</span>
+                    <span>Доступно вылетов: <strong class="text-indigo-600 font-bold">${g.variants_count}</strong></span>
+                  </div>
+                  
+                  <!-- Бейджи операторов отеля -->
+                  <div class="flex flex-wrap items-center gap-1.5 mt-2">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Операторы:</span>
+                    ${opBadgesHtml}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Блок цены -->
+              <div class="text-left md:text-right flex md:flex-col items-baseline md:items-end justify-between border-t md:border-t-0 pt-3 md:pt-0">
+                <span class="text-xs text-slate-400 font-bold uppercase tracking-wider">Лучшая цена от:</span>
+                <div class="text-2xl font-black text-slate-900 leading-tight">
+                  $${Math.round(finalMinPrice).toLocaleString()}
+                </div>
+                <span class="text-[11px] text-slate-400 font-medium">≈ ${approxUzs} сум</span>
+              </div>
+            </div>
+
+            <!-- Таблица вылетов и туров -->
+            <div class="mt-4 overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead>
+                  <tr class="bg-slate-50 text-slate-600 border-y border-slate-200 font-black">
+                    <th class="py-2.5 px-3">Партнер (Туроператор)</th>
+                    <th class="py-2.5 px-3">Заезд / Время вылета</th>
+                    <th class="py-2.5 px-3">Чартер / Рейс</th>
+                    <th class="py-2.5 px-2 text-center">Ночей</th>
+                    <th class="py-2.5 px-3">Номер / Размещение</th>
+                    <th class="py-2.5 px-2 text-center">Питание</th>
+                    <th class="py-2.5 px-3 text-center">Рейсы туда/обр.</th>
+                    <th class="py-2.5 px-3 text-right">Итоговая цена</th>
+                    <th class="py-2.5 px-3 text-right">Действие</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                  ${g.tours.map(t => {
+                    const finalPrice = calculateDisplayPrice(t.price);
+                    const isRed = t.is_red_row || !t.is_available;
+                    const rowBgClass = isRed ? 'bg-rose-50/70 hover:bg-rose-100/60' : 'hover:bg-slate-50/90';
+                    const timeStr = t.departure_time 
+                      ? `<span class="text-[11px] text-indigo-700 font-bold block"><i class="fa-regular fa-clock mr-1"></i>${t.departure_time}</span>` 
+                      : `<span class="text-[10px] text-slate-400 font-normal block"><i class="fa-solid fa-plane-departure mr-1 text-slate-300"></i>По расписанию</span>`;
+                    const dayStr = t.day_of_week ? `<span class="text-slate-500 font-bold">, ${t.day_of_week}</span>` : '';
+                    const opBadgeCls = getOperatorBadgeClass(t.operator_name);
+
+                    return `
+                      <tr class="${rowBgClass} transition">
+                        
+                        <!-- Колонка: Партнер (Туроператор) - всегда показываем точное имя партнера! -->
+                        <td class="py-3 px-3 font-bold text-slate-800">
+                          <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-black ${opBadgeCls} shadow-xs">
+                            <i class="fa-solid fa-building mr-1.5 opacity-80"></i>${t.operator_name}
+                          </span>
+                        </td>
+
+                        <!-- Заезд -->
+                        <td class="py-3 px-3 font-semibold text-slate-900 whitespace-nowrap">
+                          <span class="text-xs font-black text-slate-950">${t.checkin}</span>${dayStr}
+                          ${timeStr}
+                        </td>
+
+                        <!-- Чартер / Рейс -->
+                        <td class="py-3 px-3 text-slate-600 max-w-[200px]">
+                          <div class="truncate font-medium text-slate-800" title="${t.tour_name}">${t.tour_name || 'Прямой рейс'}</div>
+                        </td>
+
+                        <!-- Ночей -->
+                        <td class="py-3 px-2 text-center font-black text-slate-800">
+                          ${t.nights}
+                        </td>
+
+                        <!-- Номер -->
+                        <td class="py-3 px-3 text-slate-700 max-w-[210px] font-medium" title="${t.room_type}">
+                          <div class="truncate">${t.room_type}</div>
+                        </td>
+
+                        <!-- Питание -->
+                        <td class="py-3 px-2 text-center">
+                          <span class="inline-block px-2 py-0.5 rounded font-black text-[11px] ${t.meal_type.includes('UAI') ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-emerald-50 text-emerald-800 border border-emerald-200'}">
+                            ${t.meal_type}
+                          </span>
+                        </td>
+
+                        <!-- Места на рейсах -->
+                        <td class="py-3 px-3 text-center">
+                          ${isRed 
+                            ? `<span class="inline-flex items-center text-rose-600 font-bold text-[11px]"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Нет мест</span>`
+                            : `<span class="inline-flex items-center text-emerald-600 font-bold text-[11px]"><i class="fa-solid fa-angles-right text-emerald-500 mr-1"></i><i class="fa-solid fa-angles-left text-emerald-500 mr-1"></i> Есть места</span>`
+                          }
+                        </td>
+
+                        <!-- Итоговая цена -->
+                        <td class="py-3 px-3 text-right">
+                          <div class="font-black text-slate-900 text-sm">$${Math.round(finalPrice).toLocaleString()}</div>
+                          <span class="text-[10px] text-slate-400">на всех</span>
+                        </td>
+
+                        <!-- Кнопки: Для клиента + Корзина оператора / Заявка -->
+                        <td class="py-3 px-3 text-right">
+                          <div class="flex items-center justify-end space-x-1.5">
+                            
+                            <!-- Кнопка копирования предложения для туриста в 1 клик -->
+                            <button onclick="copyTourProposal(${JSON.stringify({...t, price: finalPrice}).replace(/"/g, '&quot;')})" title="Скопировать красивое готовое предложение для отправки в Telegram/WhatsApp" class="inline-flex items-center space-x-1 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-bold text-xs px-2.5 py-1.5 rounded-xl transition shadow-sm">
+                              <i class="fa-regular fa-copy"></i>
+                              <span>Клиенту</span>
+                            </button>
+
+                            <!-- Прямая ссылка в корзину бронирования конкретного партнера -->
+                            <a href="${t.booking_url}" target="_blank" rel="noopener noreferrer" title="Перейти в систему бронирования партнера ${t.operator_name}" class="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-indigo-700 text-white font-bold text-xs transition shadow-sm">
+                              <span>Бронь</span>
+                              <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                            </a>
+
+                            <!-- Быстрое создание заявки -->
+                            <button onclick="openBookingModal(${JSON.stringify({...t, price: finalPrice}).replace(/"/g, '&quot;')})" title="Оформить заявку туриста" class="inline-flex items-center justify-center w-7 h-7 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition shadow-sm">
+                              <i class="fa-solid fa-file-pen text-[10px]"></i>
+                            </button>
+
+                          </div>
+                        </td>
+
+                      </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
+
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Копирование коммерческого предложения для клиента в буфер обмена
+    function copyTourProposal(tour) {
+      const cityFrom = document.getElementById('city_from').value;
+      const adults = document.getElementById('adults').value;
+      const children = document.getElementById('children_count').value;
+
+      let guestsStr = `${adults} взр.`;
+      if (children > 0) {
+        guestsStr += ` + ${children} дет.`;
+      }
+
+      const text = `🌴 Готовое предложение по вашему запросу:
+
+🏨 Отель: ${tour.hotel_name} ${tour.hotel_stars}
+📍 Курорт: ${tour.resort || 'Курорт'}
+🏢 Партнер / Туроператор: ${tour.operator_name}
+✈️ Вылет: ${tour.checkin} ${tour.departure_time ? '(' + tour.departure_time + ')' : ''} из г. ${cityFrom}
+🌙 Длительность: ${tour.nights} ночей
+🍽 Питание: ${tour.meal_type}
+🛏 Размещение: ${tour.room_type} (${guestsStr})
+
+💵 Стоимость полного пакета: ${Math.round(tour.price).toLocaleString()} $
+
+✅ В стоимость включено:
+• Прямой авиаперелет туда и обратно
+• Проживание в отеле
+• Питание по системе ${tour.meal_type}
+• Групповой трансфер аэропорт — отель — аэропорт
+• Медицинская страховка
+
+📩 Для бронирования напишите нам в ответ!`;
+
+      navigator.clipboard.writeText(text).then(() => {
+        showToast("Предложение скопировано в буфер обмена! Готово для отправки в Telegram / WhatsApp.");
+      }).catch(err => {
+        prompt("Скопируйте текст вручную:", text);
+      });
+    }
+
+    // Модальное окно бронирования (B2C)
+    function openBookingModal(tour) {
+      currentSelectedTour = tour;
+      const summary = document.getElementById('modalTourSummary');
+      summary.innerHTML = `
+        <div class="font-black text-slate-900">${tour.hotel_name} ${tour.hotel_stars}</div>
+        <div class="text-slate-600 mt-1">Партнер (туроператор): <strong class="text-indigo-700">${tour.operator_name}</strong></div>
+        <div class="text-slate-600">Заезд: <strong>${tour.checkin}</strong> (${tour.nights} ночей) | Питание: <strong>${tour.meal_type}</strong></div>
+        <div class="text-slate-600">Номер: <strong>${tour.room_type}</strong></div>
+        <div class="text-emerald-700 font-extrabold text-sm pt-1">Итоговая стоимость: $${Math.round(tour.price).toLocaleString()}</div>
+      `;
+      document.getElementById('bookingModal').classList.remove('hidden');
+    }
+
+    function closeBookingModal() {
+      document.getElementById('bookingModal').classList.add('hidden');
+    }
+
+    async function submitBooking(e) {
+      e.preventDefault();
+      if (!currentSelectedTour) return;
+
+      const name = document.getElementById('bk_client_name').value.trim();
+      const phone = document.getElementById('bk_phone').value.trim();
+      const telegram = document.getElementById('bk_telegram').value.trim();
+      const notes = document.getElementById('bk_notes').value.trim();
+
+      const btn = document.getElementById('bk_submit_btn');
+      btn.disabled = true;
+      btn.textContent = "Отправка...";
+
+      const payload = {
+        client_name: name,
+        phone: phone,
+        telegram: telegram || null,
+        hotel_name: currentSelectedTour.hotel_name,
+        hotel_stars: currentSelectedTour.hotel_stars,
+        resort: currentSelectedTour.resort,
+        checkin: currentSelectedTour.checkin,
+        nights: String(currentSelectedTour.nights),
+        meal_type: currentSelectedTour.meal_type,
+        room_type: currentSelectedTour.room_type,
+        price: currentSelectedTour.price,
+        currency: "USD",
+        operator_name: currentSelectedTour.operator_name,
+        notes: notes || null
+      };
+
+      try {
+        const res = await fetch('/api/booking-request', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-check"></i> <span>Отправить заявку менеджеру</span>`;
+        closeBookingModal();
+        showToast(data.message || "Заявка успешно принята!");
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = "Ошибка, попробуйте еще раз";
+        alert("Ошибка отправки заявки: " + err.message);
+      }
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toastMsg').textContent = msg;
+      toast.classList.remove('translate-y-24');
+      setTimeout(() => {
+        toast.classList.add('translate-y-24');
+      }, 4000);
+    }
+
+    // Быстрый фильтр отелей
+    document.getElementById('hotelFilterInput').addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase().trim();
+      if (!q) {
+        renderHotels(allHotelGroups);
+        return;
+      }
+      const filtered = allHotelGroups.filter(g => 
+        g.hotel_name.toLowerCase().includes(q) || 
+        (g.resort && g.resort.toLowerCase().includes(q))
+      );
+      renderHotels(filtered);
+    });
+  </script>
+
+</body>
+</html>

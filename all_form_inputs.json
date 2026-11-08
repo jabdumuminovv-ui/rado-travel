@@ -1,0 +1,98 @@
+[
+  {
+    "name": "CHECKIN_BEG",
+    "type": "text",
+    "value": "06.11.2026",
+    "checked": false
+  },
+  {
+    "name": "CHECKIN_END",
+    "type": "text",
+    "value": "06.11.2026",
+    "checked": false
+  },
+  {
+    "name": "COSTMIN",
+    "type": "number",
+    "value": "",
+    "checked": false
+  },
+  {
+    "name": "COSTMAX",
+    "type": "number",
+    "value": "",
+    "checked": false
+  },
+  {
+    "name": "TOWNS_ANY",
+    "type": "checkbox",
+    "value": "",
+    "checked": true
+  },
+  {
+    "name": "townssearch",
+    "type": "search",
+    "value": "",
+    "checked": false
+  },
+  {
+    "name": "STARS_ANY",
+    "type": "checkbox",
+    "value": "",
+    "checked": true
+  },
+  {
+    "name": "HOTELS_SEL",
+    "type": "checkbox",
+    "value": "",
+    "checked": false
+  },
+  {
+    "name": "HOTELS_ANY",
+    "type": "checkbox",
+    "value": "",
+    "checked": true
+  },
+  {
+    "name": "hotelsearch",
+    "type": "search",
+    "value": "",
+    "checked": false
+  },
+  {
+    "name": "MEALS_ANY",
+    "type": "checkbox",
+    "value": "",
+    "checked": true
+  },
+  {
+    "name": "ROOMS_ANY",
+    "type": "checkbox",
+    "value": "",
+    "checked": true
+  },
+  {
+    "name": "FREIGHT",
+    "type": "checkbox",
+    "value": "",
+    "checked": false
+  },
+  {
+    "name": "FILTER",
+    "type": "checkbox",
+    "value": "",
+    "checked": false
+  },
+  {
+    "name": "MOMENT_CONFIRM",
+    "type": "checkbox",
+    "value": "",
+    "checked": false
+  },
+  {
+    "name": "PARTITION_PRICE",
+    "type": "checkbox",
+    "value": "160",
+    "checked": false
+  }
+]

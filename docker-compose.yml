@@ -1,0 +1,11 @@
+services:
+  tour-aggregator:
+    build: .
+    container_name: tourhub-app
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./bookings.json:/app/bookings.json

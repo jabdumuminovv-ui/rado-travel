@@ -1,0 +1,154 @@
+[
+  {
+    "name": "Kompas",
+    "url": "https://online.uz.kompastour.com/cl_refer",
+    "status": null,
+    "engine": "Unknown",
+    "details": "",
+    "error": "The read operation timed out"
+  },
+  {
+    "name": "Centrum",
+    "url": "https://online.centrum-holidays.com/",
+    "status": null,
+    "engine": "Unknown",
+    "details": "",
+    "error": "<urlopen error [Errno 11001] getaddrinfo failed>"
+  },
+  {
+    "name": "Pegas",
+    "url": "https://uz.pegast.asia/",
+    "status": null,
+    "engine": "Unknown",
+    "details": "",
+    "error": "<urlopen error [Errno 11001] getaddrinfo failed>"
+  },
+  {
+    "name": "DeluxTur",
+    "url": "https://b2bdeluxtur.com/",
+    "status": null,
+    "engine": "Unknown",
+    "details": "",
+    "error": "<urlopen error _ssl.c:983: The handshake operation timed out>"
+  },
+  {
+    "name": "IzelBooking",
+    "url": "https://www.izelbooking.com/",
+    "status": null,
+    "engine": "Unknown",
+    "details": "",
+    "error": "<urlopen error [Errno 11001] getaddrinfo failed>"
+  },
+  {
+    "name": "RateHawk",
+    "url": "https://www.ratehawk.com/",
+    "status": null,
+    "engine": "Unknown",
+    "details": "",
+    "error": "<urlopen error [Errno 11001] getaddrinfo failed>"
+  },
+  {
+    "name": "AtlasAvia",
+    "url": "https://atlasaviatour.uz/",
+    "status": null,
+    "engine": "Unknown",
+    "details": "",
+    "error": "<urlopen error [Errno 11001] getaddrinfo failed>"
+  },
+  {
+    "name": "EnjoyFly",
+    "url": "https://b2b.enjoyfly.uz/",
+    "status": null,
+    "engine": "Unknown",
+    "details": "",
+    "error": "<urlopen error [Errno 11001] getaddrinfo failed>"
+  },
+  {
+    "name": "MirJahon",
+    "url": "https://online.mir-jahon.uz/",
+    "status": null,
+    "engine": "Unknown",
+    "details": "",
+    "error": "<urlopen error [Errno 11001] getaddrinfo failed>"
+  },
+  {
+    "name": "CrystalBay",
+    "url": "https://booking-uz.crystalbay.com/",
+    "status": null,
+    "engine": "Unknown",
+    "details": "",
+    "error": "<urlopen error [Errno 11001] getaddrinfo failed>"
+  },
+  {
+    "name": "UzPrestige",
+    "url": "https://online.uz-prestige.com/",
+    "status": null,
+    "engine": "Unknown",
+    "details": "",
+    "error": "<urlopen error [Errno 11001] getaddrinfo failed>"
+  },
+  {
+    "name": "FlyKhiva",
+    "url": "https://b2b.flykhiva.travel/",
+    "status": null,
+    "engine": "Unknown",
+    "details": "",
+    "error": "<urlopen error [Errno 11001] getaddrinfo failed>"
+  },
+  {
+    "name": "RightFlight",
+    "url": "https://online.right-flight.org/",
+    "status": null,
+    "engine": "Unknown",
+    "details": "",
+    "error": "<urlopen error [Errno 11001] getaddrinfo failed>"
+  },
+  {
+    "name": "VelikolepniyVek",
+    "url": "https://velikolepniy-vek.com/",
+    "status": null,
+    "engine": "Unknown",
+    "details": "",
+    "error": "<urlopen error [Errno 11001] getaddrinfo failed>"
+  },
+  {
+    "name": "EasyBooking",
+    "url": "https://tours.easybooking.uz/cl_refer",
+    "status": null,
+    "engine": "Unknown",
+    "details": "",
+    "error": "<urlopen error [Errno 11001] getaddrinfo failed>"
+  },
+  {
+    "name": "SelfieTravel",
+    "url": "https://b2b.selfietravel.kz/",
+    "status": null,
+    "engine": "Unknown",
+    "details": "",
+    "error": "<urlopen error [Errno 11001] getaddrinfo failed>"
+  },
+  {
+    "name": "Kazunion",
+    "url": "https://online.kazunion.com/",
+    "status": null,
+    "engine": "Unknown",
+    "details": "",
+    "error": "<urlopen error [Errno 11001] getaddrinfo failed>"
+  },
+  {
+    "name": "MalvaTour",
+    "url": "https://malvatouroperator.uz/",
+    "status": null,
+    "engine": "Unknown",
+    "details": "",
+    "error": "<urlopen error [Errno 11001] getaddrinfo failed>"
+  },
+  {
+    "name": "Asialuxe",
+    "url": "https://b2b.asialuxe.uz/",
+    "status": null,
+    "engine": "Unknown",
+    "details": "",
+    "error": "<urlopen error [Errno 11001] getaddrinfo failed>"
+  }
+]
