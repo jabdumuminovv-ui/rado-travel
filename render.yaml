@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: rado-travel
+    env: docker
+    plan: free
+    dockerfilePath: Dockerfile
+    healthCheckPath: /api/operators
