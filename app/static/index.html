@@ -41,8 +41,8 @@
         </div>
       </div>
 
-      <!-- Переключатель B2B / B2C и Статус -->
-      <div class="flex items-center space-x-3 text-xs">
+      <!-- Переключатель B2B / B2C, Статус и Авторизованный профиль -->
+      <div class="flex items-center space-x-2 sm:space-x-3 text-xs">
         
         <!-- Кнопка переключения режима B2B / B2C -->
         <div class="bg-slate-800/90 p-1 rounded-xl border border-slate-700 flex items-center space-x-1">
@@ -56,10 +56,30 @@
           </button>
         </div>
 
-        <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-semibold text-[11px]">
+        <span class="hidden lg:inline-flex items-center px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-semibold text-[11px]">
           <span class="w-2 h-2 mr-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
           19 операторов
         </span>
+
+        <!-- Блок профиля авторизованного пользователя -->
+        <div id="userProfileHeader" class="flex items-center space-x-2 pl-2 border-l border-slate-800">
+          <div class="hidden sm:flex flex-col text-right leading-tight">
+            <span id="headerAgencyName" class="font-extrabold text-white text-xs truncate max-w-[140px]">...</span>
+            <span id="headerSubPlan" class="text-[10px] text-emerald-400 font-bold">🟢 Загрузка...</span>
+          </div>
+
+          <!-- Кнопка Админ-панели (видна только если role === 'admin') -->
+          <button id="adminHeaderBtn" onclick="openAdminModal()" class="hidden px-2.5 py-1.5 rounded-xl font-black text-xs bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-md flex items-center space-x-1 transition">
+            <i class="fa-solid fa-gear text-amber-300"></i>
+            <span class="hidden sm:inline">Админ-панель</span>
+          </button>
+
+          <!-- Кнопка выхода -->
+          <button onclick="logout()" title="Выйти из системы" class="p-2 rounded-xl bg-slate-800 hover:bg-rose-900/40 text-slate-400 hover:text-rose-300 border border-slate-700 transition">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+          </button>
+        </div>
+
       </div>
     </div>
   </header>
@@ -582,11 +602,22 @@
       `;
 
       try {
+        const token = localStorage.getItem('rado_token') || '';
         const response = await fetch('/api/search', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
           body: JSON.stringify(payload)
         });
+
+        if (response.status === 401 || response.status === 403) {
+          const errData = await response.json().catch(() => ({}));
+          const errMsg = errData.detail || "Требуется авторизация или срок подписки истёк.";
+          showLoginModal(errMsg);
+          throw new Error(errMsg);
+        }
 
         const data = await response.json();
         spinner.classList.add('hidden');
@@ -1002,7 +1033,815 @@
       );
       renderHotels(filtered);
     });
-  </script>
+  
+    // ==========================================
+    // СИСТЕМА АВТОРИЗАЦИИ И АДМИН-ПАНЕЛИ (B2B SaaS)
+    // ==========================================
+    let currentUser = null;
+    let allAgencies = [];
+    let allBookingsList = [];
+
+    async function initAuth() {
+      const token = localStorage.getItem('rado_token');
+      if (!token) {
+        showLoginModal();
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/auth/me', {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          localStorage.removeItem('rado_token');
+          showLoginModal(err.detail || 'Требуется авторизация');
+          return;
+        }
+
+        currentUser = await res.json();
+        updateHeaderUserUI();
+      } catch (e) {
+        showLoginModal('Ошибка проверки сессии');
+      }
+    }
+
+    function showLoginModal(errorText = null) {
+      const modal = document.getElementById('loginModal');
+      const alertBox = document.getElementById('loginAlert');
+      const alertMsg = document.getElementById('loginAlertText');
+
+      if (errorText) {
+        alertMsg.textContent = errorText;
+        alertBox.classList.remove('hidden');
+      } else {
+        alertBox.classList.add('hidden');
+      }
+      modal.classList.remove('hidden');
+    }
+
+    function hideLoginModal() {
+      document.getElementById('loginModal').classList.add('hidden');
+    }
+
+    function togglePasswordVisibility() {
+      const pwd = document.getElementById('loginPassword');
+      const icon = document.getElementById('pwdToggleIcon');
+      if (pwd.type === 'password') {
+        pwd.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+      } else {
+        pwd.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+      }
+    }
+
+    async function handleLoginSubmit(e) {
+      e.preventDefault();
+      const login = document.getElementById('loginUsername').value.trim();
+      const password = document.getElementById('loginPassword').value.trim();
+      const btn = document.getElementById('loginBtnSubmit');
+      const alertBox = document.getElementById('loginAlert');
+      const alertMsg = document.getElementById('loginAlertText');
+
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> <span>Проверка доступа...</span>`;
+      alertBox.classList.add('hidden');
+
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ login, password })
+        });
+
+        const data = await res.json();
+        btn.disabled = false;
+        btn.innerHTML = `<span>Войти в систему</span> <i class="fa-solid fa-arrow-right"></i>`;
+
+        if (!res.ok) {
+          alertMsg.textContent = data.detail || 'Ошибка авторизации';
+          alertBox.classList.remove('hidden');
+          return;
+        }
+
+        localStorage.setItem('rado_token', data.token);
+        currentUser = data.user;
+        hideLoginModal();
+        updateHeaderUserUI();
+        showToast(`Добро пожаловать в RaDo Travel, ${currentUser.agency_name}!`);
+
+      } catch (err) {
+        btn.disabled = false;
+        btn.innerHTML = `<span>Войти в систему</span> <i class="fa-solid fa-arrow-right"></i>`;
+        alertMsg.textContent = 'Ошибка подключения к серверу: ' + err.message;
+        alertBox.classList.remove('hidden');
+      }
+    }
+
+    function updateHeaderUserUI() {
+      if (!currentUser) return;
+
+      const agencyEl = document.getElementById('headerAgencyName');
+      const planEl = document.getElementById('headerSubPlan');
+      const adminBtn = document.getElementById('adminHeaderBtn');
+
+      agencyEl.textContent = currentUser.agency_name || currentUser.login;
+
+      if (currentUser.subscription_plan === 'lifetime') {
+        planEl.className = 'text-[10px] text-emerald-400 font-bold';
+        planEl.textContent = '🟢 VIP Бессрочно';
+      } else if (currentUser.days_left !== null) {
+        if (currentUser.days_left <= 3) {
+          planEl.className = 'text-[10px] text-rose-400 font-bold animate-pulse';
+          planEl.textContent = `⏳ Осталось ${currentUser.days_left} дн.`;
+        } else {
+          planEl.className = 'text-[10px] text-amber-300 font-bold';
+          planEl.textContent = `🟢 Подписка: ${currentUser.days_left} дн.`;
+        }
+      }
+
+      if (currentUser.role === 'admin') {
+        adminBtn.classList.remove('hidden');
+      } else {
+        adminBtn.classList.add('hidden');
+      }
+    }
+
+    async function logout() {
+      if (!confirm("Вы действительно хотите выйти из системы?")) return;
+      const token = localStorage.getItem('rado_token');
+      if (token) {
+        fetch('/api/auth/logout', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + token }
+        }).catch(() => {});
+      }
+      localStorage.removeItem('rado_token');
+      currentUser = null;
+      showLoginModal();
+    }
+
+    // --- УПРАВЛЕНИЕ АДМИН-ПАНЕЛЬЮ ---
+
+    async function openAdminModal() {
+      const modal = document.getElementById('adminModal');
+      modal.classList.remove('hidden');
+      await loadAdminData();
+    }
+
+    function closeAdminModal() {
+      document.getElementById('adminModal').classList.add('hidden');
+    }
+
+    async function loadAdminData() {
+      const token = localStorage.getItem('rado_token');
+      if (!token) return;
+
+      try {
+        // Загрузка статистики
+        const statsRes = await fetch('/api/admin/stats', {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (statsRes.ok) {
+          const stats = await statsRes.json();
+          document.getElementById('statTotalAgencies').textContent = stats.total_agencies;
+          document.getElementById('statActiveSubs').textContent = stats.active_subscriptions;
+          document.getElementById('statExpiredSubs').textContent = stats.expired_subscriptions;
+          document.getElementById('statTotalRevenue').textContent = `$${stats.total_revenue.toLocaleString()}`;
+        }
+
+        // Загрузка пользователей
+        const usersRes = await fetch('/api/admin/users', {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (usersRes.ok) {
+          allAgencies = await usersRes.json();
+          renderAgenciesTable(allAgencies);
+        }
+
+        // Загрузка заявок
+        const bkRes = await fetch('/api/bookings', {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (bkRes.ok) {
+          allBookingsList = await bkRes.json();
+          document.getElementById('admBookingsCount').textContent = allBookingsList.length;
+          renderBookingsTable(allBookingsList);
+        }
+
+      } catch (err) {
+        showToast('Ошибка загрузки данных админки: ' + err.message);
+      }
+    }
+
+    function switchAdminTab(tab) {
+      const tabAg = document.getElementById('admTabAgencies');
+      const tabBk = document.getElementById('admTabBookings');
+      const contentAg = document.getElementById('adminTabAgenciesContent');
+      const contentBk = document.getElementById('adminTabBookingsContent');
+
+      if (tab === 'agencies') {
+        tabAg.className = 'px-4 py-2 rounded-xl text-xs font-black transition bg-indigo-600 text-white shadow-sm flex items-center space-x-1.5';
+        tabBk.className = 'px-4 py-2 rounded-xl text-xs font-black transition text-slate-600 hover:bg-slate-100 flex items-center space-x-1.5';
+        contentAg.classList.remove('hidden');
+        contentBk.classList.add('hidden');
+      } else {
+        tabBk.className = 'px-4 py-2 rounded-xl text-xs font-black transition bg-indigo-600 text-white shadow-sm flex items-center space-x-1.5';
+        tabAg.className = 'px-4 py-2 rounded-xl text-xs font-black transition text-slate-600 hover:bg-slate-100 flex items-center space-x-1.5';
+        contentBk.classList.remove('hidden');
+        contentAg.classList.add('hidden');
+      }
+    }
+
+    function renderAgenciesTable(agencies) {
+      const tbody = document.getElementById('adminAgenciesTableBody');
+      if (!agencies || agencies.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-slate-400 font-semibold">Нет подключенных турагентств</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = agencies.map(u => {
+        const isAdmin = u.role === 'admin';
+        const isLifetime = u.subscription_plan === 'lifetime';
+        const isExpired = u.is_expired;
+        const isActive = u.is_active;
+
+        let planBadge = '';
+        if (isLifetime) {
+          planBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-purple-100 text-purple-800 border border-purple-200">Бессрочно</span>`;
+        } else if (u.subscription_plan === 'yearly') {
+          planBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-indigo-100 text-indigo-800 border border-indigo-200">1 Год</span>`;
+        } else if (u.subscription_plan === 'quarterly') {
+          planBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-sky-100 text-sky-800 border border-sky-200">3 Месяца</span>`;
+        } else if (u.subscription_plan === 'trial_7d') {
+          planBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800 border border-amber-200">7 Дней</span>`;
+        } else {
+          planBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-200">1 Месяц</span>`;
+        }
+
+        let expStr = '';
+        if (isLifetime) {
+          expStr = `<span class="text-emerald-700 font-bold">Не ограничен</span>`;
+        } else if (u.expires_at) {
+          const expDate = new Date(u.expires_at).toLocaleDateString('ru-RU');
+          const daysText = isExpired ? '<span class="text-rose-600 font-bold block text-[10px]">Истёк</span>' : `<span class="text-indigo-600 font-bold block text-[10px]">${u.days_left} дн. осталось</span>`;
+          expStr = `<div><strong>${expDate}</strong>${daysText}</div>`;
+        }
+
+        let statusBadge = '';
+        if (!isActive) {
+          statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-800 border border-rose-200">Заблокирован</span>`;
+        } else if (isExpired) {
+          statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800 border border-amber-200">Истёк</span>`;
+        } else {
+          statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-200">Активен</span>`;
+        }
+
+        const safePass = u.raw_password || '******';
+        const contact = [u.phone, u.telegram].filter(Boolean).join(' • ');
+
+        return `
+          <tr class="hover:bg-slate-50 transition">
+            <td class="py-3 px-3">
+              <div class="font-black text-slate-900">${u.agency_name}</div>
+              <div class="text-[11px] text-slate-500 font-medium">${u.manager_name || 'Менеджер'} ${contact ? '(' + contact + ')' : ''}</div>
+              ${u.notes ? `<div class="text-[10px] text-slate-400 italic mt-0.5">${u.notes}</div>` : ''}
+            </td>
+            <td class="py-3 px-3">
+              <div class="font-mono text-xs font-bold text-slate-800 flex items-center space-x-1.5">
+                <i class="fa-solid fa-user text-slate-400 text-[10px]"></i>
+                <span>${u.login}</span>
+              </div>
+              <div class="font-mono text-[11px] text-slate-500 flex items-center space-x-1.5 mt-0.5">
+                <i class="fa-solid fa-key text-slate-400 text-[10px]"></i>
+                <span>${safePass}</span>
+              </div>
+            </td>
+            <td class="py-3 px-2 text-center">${planBadge}</td>
+            <td class="py-3 px-3 text-center">${expStr}</td>
+            <td class="py-3 px-2 text-right font-black text-slate-800">$${u.price_paid || 0}</td>
+            <td class="py-3 px-2 text-center">${statusBadge}</td>
+            <td class="py-3 px-3 text-right">
+              <div class="flex items-center justify-end space-x-1.5">
+                
+                <!-- Скопировать сообщение клиенту -->
+                <button onclick="copyClientAccess('${u.agency_name}', '${u.login}', '${safePass}', '${u.expires_at || ''}')" title="Скопировать доступ для отправки в Telegram клиенту" class="p-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold transition">
+                  <i class="fa-solid fa-copy"></i>
+                </button>
+
+                ${!isLifetime ? `
+                  <!-- Продлить на 30 дней -->
+                  <button onclick="quickExtendSubscription('${u.id}', 30)" title="Продлить подписку на +30 дней" class="px-2 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold text-[11px] transition">
+                    +30 дн
+                  </button>
+                ` : ''}
+
+                ${!isAdmin ? `
+                  <!-- Заблокировать / Разблокировать -->
+                  <button onclick="toggleUserActive('${u.id}', ${isActive})" title="${isActive ? 'Заблокировать доступ' : 'Разблокировать'}" class="p-1.5 rounded-lg ${isActive ? 'bg-amber-50 hover:bg-amber-100 text-amber-800' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800'} transition">
+                    <i class="fa-solid ${isActive ? 'fa-ban' : 'fa-check'}"></i>
+                  </button>
+
+                  <!-- Удалить -->
+                  <button onclick="deleteUser('${u.id}', '${u.agency_name}')" title="Удалить" class="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 transition">
+                    <i class="fa-solid fa-trash-can"></i>
+                  </button>
+                ` : ''}
+
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderBookingsTable(bookings) {
+      const tbody = document.getElementById('adminBookingsTableBody');
+      if (!bookings || bookings.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-slate-400 font-semibold">Пока нет поступивших заявок на туры</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = bookings.slice().reverse().map(b => {
+        const dateStr = b.created_at ? new Date(b.created_at).toLocaleString('ru-RU') : '';
+        return `
+          <tr class="hover:bg-slate-50 transition">
+            <td class="py-3 px-3">
+              <span class="font-mono font-bold text-indigo-700">${b.booking_id || ''}</span>
+              <span class="text-[10px] text-slate-400 block">${dateStr}</span>
+            </td>
+            <td class="py-3 px-3">
+              <div class="font-bold text-slate-900">${b.client_name}</div>
+              <div class="text-[11px] text-slate-600 font-mono">${b.phone} ${b.telegram ? '(' + b.telegram + ')' : ''}</div>
+              ${b.notes ? `<div class="text-[10px] text-slate-500 italic mt-0.5">${b.notes}</div>` : ''}
+            </td>
+            <td class="py-3 px-3">
+              <div class="font-black text-slate-900">${b.hotel_name} ${b.hotel_stars || ''}</div>
+              <div class="text-[11px] text-slate-500">${b.resort || ''} | ${b.room_type || ''} (${b.meal_type || ''})</div>
+            </td>
+            <td class="py-3 px-2 text-center">
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-indigo-50 text-indigo-700 border border-indigo-200">${b.operator_name || 'Туроператор'}</span>
+            </td>
+            <td class="py-3 px-2 text-center font-bold text-slate-700">
+              ${b.checkin} (${b.nights} ночей)
+            </td>
+            <td class="py-3 px-3 text-right font-black text-emerald-700">
+              $${Math.round(b.price || 0).toLocaleString()}
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Добавление нового турагентства
+    function openCreateAgencyModal() {
+      generateRandomPassword();
+      document.getElementById('createAgencyModal').classList.remove('hidden');
+    }
+
+    function closeCreateAgencyModal() {
+      document.getElementById('createAgencyModal').classList.add('hidden');
+    }
+
+    function generateRandomPassword() {
+      const chars = '23456789abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ';
+      let pass = 'rado';
+      for (let i = 0; i < 4; i++) {
+        pass += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      document.getElementById('ca_password').value = pass;
+    }
+
+    function onPlanChange() {
+      const plan = document.getElementById('ca_plan').value;
+      const priceInput = document.getElementById('ca_price');
+      if (plan === 'monthly') priceInput.value = '50';
+      else if (plan === 'quarterly') priceInput.value = '130';
+      else if (plan === 'yearly') priceInput.value = '400';
+      else if (plan === 'trial_7d') priceInput.value = '0';
+      else if (plan === 'lifetime') priceInput.value = '0';
+    }
+
+    async function handleCreateAgencySubmit(e) {
+      e.preventDefault();
+      const token = localStorage.getItem('rado_token');
+      if (!token) return;
+
+      const payload = {
+        agency_name: document.getElementById('ca_agency_name').value.trim(),
+        manager_name: document.getElementById('ca_manager_name').value.trim(),
+        phone: document.getElementById('ca_phone').value.trim(),
+        login: document.getElementById('ca_login').value.trim(),
+        password: document.getElementById('ca_password').value.trim(),
+        subscription_plan: document.getElementById('ca_plan').value,
+        price_paid: parseFloat(document.getElementById('ca_price').value || 0),
+        notes: document.getElementById('ca_notes').value.trim()
+      };
+
+      const btn = document.getElementById('ca_submit_btn');
+      btn.disabled = true;
+      btn.textContent = 'Создание...';
+
+      try {
+        const res = await fetch('/api/admin/users', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        btn.disabled = false;
+        btn.textContent = 'Создать и выдать доступ';
+
+        if (!res.ok) {
+          alert('Ошибка: ' + (data.detail || 'Не удалось создать агентство'));
+          return;
+        }
+
+        closeCreateAgencyModal();
+        showToast(`Агентство "${payload.agency_name}" успешно подключено!`);
+        await loadAdminData();
+
+        // Сразу предлагаем скопировать доступ для отправки в Telegram
+        copyClientAccess(payload.agency_name, payload.login, payload.password, data.expires_at);
+
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = 'Создать и выдать доступ';
+        alert('Ошибка: ' + err.message);
+      }
+    }
+
+    async function quickExtendSubscription(userId, days) {
+      const token = localStorage.getItem('rado_token');
+      if (!token) return;
+
+      if (!confirm(`Продлить подписку турагентства на +${days} дней?`)) return;
+
+      try {
+        const res = await fetch(`/api/admin/users/${userId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify({ extend_days: days })
+        });
+        if (res.ok) {
+          showToast(`Подписка успешно продлена на +${days} дней!`);
+          await loadAdminData();
+        } else {
+          const data = await res.json();
+          alert('Ошибка продления: ' + (data.detail || 'Сбой'));
+        }
+      } catch (err) {
+        alert('Ошибка сети: ' + err.message);
+      }
+    }
+
+    async function toggleUserActive(userId, currentStatus) {
+      const token = localStorage.getItem('rado_token');
+      if (!token) return;
+
+      const newStatus = !currentStatus;
+      const actionName = newStatus ? 'разблокировать' : 'заблокировать';
+
+      if (!confirm(`Вы действительно хотите ${actionName} доступ этому агентству?`)) return;
+
+      try {
+        const res = await fetch(`/api/admin/users/${userId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify({ is_active: newStatus })
+        });
+        if (res.ok) {
+          showToast(`Статус успешно изменен: ${newStatus ? 'Активен' : 'Заблокирован'}`);
+          await loadAdminData();
+        }
+      } catch (err) {
+        alert('Ошибка: ' + err.message);
+      }
+    }
+
+    async function deleteUser(userId, agencyName) {
+      const token = localStorage.getItem('rado_token');
+      if (!token) return;
+
+      if (!confirm(`Удалить турагентство "${agencyName}"? Это действие необратимо!`)) return;
+
+      try {
+        const res = await fetch(`/api/admin/users/${userId}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (res.ok) {
+          showToast(`Турагентство "${agencyName}" удалено`);
+          await loadAdminData();
+        } else {
+          const data = await res.json();
+          alert('Ошибка: ' + (data.detail || 'Не удалось удалить'));
+        }
+      } catch (err) {
+        alert('Ошибка: ' + err.message);
+      }
+    }
+
+    function copyClientAccess(agencyName, login, password, expiresAt) {
+      let expText = 'Бессрочный доступ';
+      if (expiresAt) {
+        expText = 'до ' + new Date(expiresAt).toLocaleDateString('ru-RU');
+      }
+
+      const text = `✈️ Ваш доступ к закрытой системе RaDo Travel B2B активирован!
+
+🏢 Турагентство: ${agencyName}
+🌐 Адрес платформы: https://rado-travel.onrender.com
+👤 Логин: ${login}
+🔑 Пароль: ${password}
+⏳ Срок действия подписки: ${expText}
+
+⚡ Возможности платформы:
+• Единый поиск по 19+ надежным туроператорам Узбекистана
+• Сравнение оптовых цен в реальном времени
+• Мгновенный расчет стоимости на детей
+• Наличие мест на прямых и чартерных рейсах
+• Генерация коммерческих предложений для туристов в 1 клик
+
+📲 Служба поддержки и продление подписки: @radotravel`;
+
+      navigator.clipboard.writeText(text).then(() => {
+        showToast(`Данные доступа для "${agencyName}" скопированы! Можно отправлять в Telegram.`);
+      }).catch(() => {
+        prompt("Скопируйте текст доступа вручную:", text);
+      });
+    }
+
+    // Инициализация авторизации при открытии страницы
+    window.addEventListener('DOMContentLoaded', () => {
+      initAuth();
+    });
+
+</script>
+
+
+  <!-- Модальное окно авторизации (Закрытый доступ для турагентств) -->
+  <div id="loginModal" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-slate-100 overflow-hidden transform transition-all">
+      <div class="bg-gradient-to-tr from-slate-900 via-indigo-950 to-slate-900 p-6 text-white text-center relative">
+        <div class="w-14 h-14 bg-gradient-to-tr from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center text-slate-950 font-black shadow-lg text-2xl mx-auto mb-3">
+          <i class="fa-solid fa-plane-departure"></i>
+        </div>
+        <h2 class="text-2xl font-black tracking-tight">RaDo <span class="text-amber-400">Travel</span></h2>
+        <p class="text-xs text-indigo-200 font-bold mt-1">Закрытая B2B-система для турагентств</p>
+        <span class="inline-block mt-2 px-3 py-0.5 rounded-full bg-amber-400/20 text-amber-300 text-[11px] font-black border border-amber-400/30">
+          Доступ только по абонентской подписке
+        </span>
+      </div>
+
+      <div class="p-6">
+        <div id="loginAlert" class="hidden mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold flex items-start space-x-2">
+          <i class="fa-solid fa-triangle-exclamation mt-0.5 text-rose-500"></i>
+          <span id="loginAlertText">Ошибка входа</span>
+        </div>
+
+        <form id="loginForm" onsubmit="handleLoginSubmit(event)" class="space-y-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Логин / Телефон</label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400"><i class="fa-solid fa-user"></i></span>
+              <input type="text" id="loginUsername" required placeholder="Введите ваш логин" class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-3 py-2.5 text-sm font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Пароль</label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400"><i class="fa-solid fa-lock"></i></span>
+              <input type="password" id="loginPassword" required placeholder="••••••••" class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-10 py-2.5 text-sm font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+              <button type="button" onclick="togglePasswordVisibility()" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600">
+                <i id="pwdToggleIcon" class="fa-regular fa-eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" id="loginBtnSubmit" class="w-full bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white font-black py-3 rounded-xl text-sm shadow-lg shadow-indigo-600/30 transition flex items-center justify-center space-x-2">
+            <span>Войти в систему</span>
+            <i class="fa-solid fa-arrow-right"></i>
+          </button>
+        </form>
+
+        <div class="mt-6 pt-5 border-t border-slate-100 text-center">
+          <p class="text-xs font-bold text-slate-800 mb-1.5">Хотите подключить ваше турагентство?</p>
+          <p class="text-[11px] text-slate-500 mb-3 leading-relaxed">Оформите абонентский доступ к базе 19+ туроператоров с мгновенным сравнением оптовых цен.</p>
+          <a href="https://t.me/radotravel" target="_blank" class="inline-flex items-center space-x-2 px-4 py-2.5 bg-sky-50 text-sky-700 border border-sky-200 rounded-xl text-xs font-black hover:bg-sky-100 transition shadow-sm">
+            <i class="fa-brands fa-telegram text-sky-500 text-base"></i>
+            <span>Оформить доступ в Telegram: @radotravel</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальное окно Админ-панели (Управление абонентами и тарифами) -->
+  <div id="adminModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4">
+    <div class="bg-white rounded-3xl max-w-5xl w-full shadow-2xl border border-slate-200 flex flex-col max-h-[94vh] overflow-hidden">
+      
+      <!-- Шапка админки -->
+      <div class="bg-slate-900 text-white px-6 py-4 flex items-center justify-between border-b border-slate-800">
+        <div class="flex items-center space-x-3">
+          <div class="w-9 h-9 rounded-xl bg-purple-500/20 text-purple-400 border border-purple-500/30 flex items-center justify-center text-lg font-black">
+            <i class="fa-solid fa-shield-halved"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-black flex items-center space-x-2">
+              <span>Панель управления абонентами</span>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-purple-500/30 text-purple-200 border border-purple-400/30">RaDo Travel B2B</span>
+            </h3>
+            <p class="text-xs text-slate-400">Управление турагентствами, абонентскими тарифами и заявками</p>
+          </div>
+        </div>
+        <button onclick="closeAdminModal()" class="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-slate-800 transition">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Контент админки -->
+      <div class="p-4 sm:p-6 overflow-y-auto space-y-6">
+        
+        <!-- Карточки метрик и статистики -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div class="bg-indigo-50/70 border border-indigo-100 rounded-2xl p-4">
+            <span class="text-xs font-bold text-indigo-700 block">Подключено агентств</span>
+            <div id="statTotalAgencies" class="text-2xl font-black text-indigo-950 mt-1">0</div>
+          </div>
+          <div class="bg-emerald-50/70 border border-emerald-100 rounded-2xl p-4">
+            <span class="text-xs font-bold text-emerald-700 block">Активных подписок</span>
+            <div id="statActiveSubs" class="text-2xl font-black text-emerald-950 mt-1">0</div>
+          </div>
+          <div class="bg-amber-50/70 border border-amber-100 rounded-2xl p-4">
+            <span class="text-xs font-bold text-amber-700 block">Истекших / Отключенных</span>
+            <div id="statExpiredSubs" class="text-2xl font-black text-amber-950 mt-1">0</div>
+          </div>
+          <div class="bg-purple-50/70 border border-purple-100 rounded-2xl p-4">
+            <span class="text-xs font-bold text-purple-700 block">Сумма абонплат</span>
+            <div id="statTotalRevenue" class="text-2xl font-black text-purple-950 mt-1">$0</div>
+          </div>
+        </div>
+
+        <!-- Переключатель вкладок и кнопка добавления -->
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-3">
+          <div class="flex items-center space-x-2">
+            <button id="admTabAgencies" onclick="switchAdminTab('agencies')" class="px-4 py-2 rounded-xl text-xs font-black transition bg-indigo-600 text-white shadow-sm flex items-center space-x-1.5">
+              <i class="fa-solid fa-building"></i>
+              <span>Турагентства-абоненты</span>
+            </button>
+            <button id="admTabBookings" onclick="switchAdminTab('bookings')" class="px-4 py-2 rounded-xl text-xs font-black transition text-slate-600 hover:bg-slate-100 flex items-center space-x-1.5">
+              <i class="fa-solid fa-inbox"></i>
+              <span>Заявки туристов на бронь</span>
+              <span id="admBookingsCount" class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-indigo-100 text-indigo-700">0</span>
+            </button>
+          </div>
+
+          <button onclick="openCreateAgencyModal()" class="px-4 py-2 rounded-xl text-xs font-black bg-emerald-600 hover:bg-emerald-500 text-white shadow-md flex items-center space-x-2 transition">
+            <i class="fa-solid fa-plus"></i>
+            <span>Подключить турагентство</span>
+          </button>
+        </div>
+
+        <!-- Таб 1: Таблица турагентств -->
+        <div id="adminTabAgenciesContent">
+          <div class="overflow-x-auto border border-slate-200 rounded-2xl">
+            <table class="w-full text-left text-xs">
+              <thead>
+                <tr class="bg-slate-50 text-slate-600 border-b border-slate-200 font-black">
+                  <th class="py-3 px-3">Турагентство / Контакт</th>
+                  <th class="py-3 px-3">Логин / Пароль</th>
+                  <th class="py-3 px-2 text-center">Тариф</th>
+                  <th class="py-3 px-3 text-center">Срок действия</th>
+                  <th class="py-3 px-2 text-right">Оплата</th>
+                  <th class="py-3 px-2 text-center">Статус</th>
+                  <th class="py-3 px-3 text-right">Действия</th>
+                </tr>
+              </thead>
+              <tbody id="adminAgenciesTableBody" class="divide-y divide-slate-100">
+                <!-- Заполняется динамически -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Таб 2: Таблица поступивших заявок -->
+        <div id="adminTabBookingsContent" class="hidden">
+          <div class="overflow-x-auto border border-slate-200 rounded-2xl">
+            <table class="w-full text-left text-xs">
+              <thead>
+                <tr class="bg-slate-50 text-slate-600 border-b border-slate-200 font-black">
+                  <th class="py-3 px-3">ID / Дата</th>
+                  <th class="py-3 px-3">Клиент / Телефон</th>
+                  <th class="py-3 px-3">Отель / Курорт</th>
+                  <th class="py-3 px-2 text-center">Оператор</th>
+                  <th class="py-3 px-2 text-center">Даты / Ночей</th>
+                  <th class="py-3 px-3 text-right">Цена</th>
+                </tr>
+              </thead>
+              <tbody id="adminBookingsTableBody" class="divide-y divide-slate-100">
+                <!-- Заполняется динамически -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальное окно добавления нового агентства -->
+  <div id="createAgencyModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden">
+      <div class="bg-slate-900 text-white px-6 py-4 flex items-center justify-between border-b border-slate-800">
+        <h3 class="text-sm font-black flex items-center space-x-2">
+          <i class="fa-solid fa-user-plus text-emerald-400"></i>
+          <span>Подключение нового турагентства</span>
+        </h3>
+        <button onclick="closeCreateAgencyModal()" class="text-slate-400 hover:text-white p-1">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <form id="createAgencyForm" onsubmit="handleCreateAgencySubmit(event)" class="p-6 space-y-3.5">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Название турагентства *</label>
+          <input type="text" id="ca_agency_name" required placeholder="Например: Samarkand Elite Tour" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Контактное лицо / Менеджер</label>
+            <input type="text" id="ca_manager_name" placeholder="Например: Алишер" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Телефон / Telegram</label>
+            <input type="text" id="ca_phone" placeholder="+998 90 123-45-67" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Логин для входа *</label>
+            <input type="text" id="ca_login" required placeholder="логин (латиница)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1 flex items-center justify-between">
+              <span>Пароль *</span>
+              <button type="button" onclick="generateRandomPassword()" class="text-[10px] text-indigo-600 font-bold hover:underline">Случайный</button>
+            </label>
+            <input type="text" id="ca_password" required placeholder="пароль" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Тарифный план</label>
+            <select id="ca_plan" onchange="onPlanChange()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+              <option value="monthly" selected>📅 1 месяц (30 дней)</option>
+              <option value="quarterly">📅 3 месяца (90 дней)</option>
+              <option value="yearly">📅 1 год (365 дней)</option>
+              <option value="trial_7d">🎁 Пробный (7 дней)</option>
+              <option value="lifetime">👑 Бессрочный VIP</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Полученная абонплата ($)</label>
+            <input type="number" id="ca_price" value="50" min="0" step="5" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-emerald-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Заметки / Примечание</label>
+          <input type="text" id="ca_notes" placeholder="Оплата через Click/Payme, филиал и т.д." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex items-center justify-end space-x-2">
+          <button type="button" onclick="closeCreateAgencyModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100">
+            Отмена
+          </button>
+          <button type="submit" id="ca_submit_btn" class="px-5 py-2 rounded-xl text-xs font-black bg-indigo-600 hover:bg-indigo-500 text-white shadow-md">
+            Создать и выдать доступ
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 
 </body>
 </html>

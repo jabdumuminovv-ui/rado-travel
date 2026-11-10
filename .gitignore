@@ -4,3 +4,8 @@ __pycache__/
 .env
 .idea/
 .vscode/
+sessions.json
+*.exe
+apply_full_admin_frontend.py
+update_frontend.py
+scripts/tunnel_watchdog.py

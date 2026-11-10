@@ -1,0 +1,38 @@
+[
+  {
+    "id": "usr_admin",
+    "login": "admin",
+    "password_hash": "70e406a6cb1355152b7b82c79390a6c93a74a4cbca516f716c2dbae1f3600772",
+    "raw_password": "rado2026admin",
+    "agency_name": "RaDo Travel HQ",
+    "manager_name": "Главный Администратор",
+    "phone": "+998 90 000-00-00",
+    "telegram": "@radotravel",
+    "role": "admin",
+    "is_active": true,
+    "subscription_plan": "lifetime",
+    "expires_at": null,
+    "price_paid": 0.0,
+    "created_at": "2026-11-10T12:05:23.859523",
+    "last_login": "2026-11-10T13:21:32.464307",
+    "notes": "Главный аккаунт владельца платформы"
+  },
+  {
+    "id": "usr_friend",
+    "login": "partner",
+    "password_hash": "18a1888bea7e1b855699489be85b4efe55ba98df40d16be5ca80c3c9d54aed80",
+    "raw_password": "rado777partner",
+    "agency_name": "VIP Partner Agency",
+    "manager_name": "Партнёр",
+    "phone": "+998 90 123-45-67",
+    "telegram": "@partner",
+    "role": "user",
+    "is_active": true,
+    "subscription_plan": "lifetime",
+    "expires_at": null,
+    "price_paid": 0.0,
+    "created_at": "2026-11-10T12:05:23.859523",
+    "last_login": "2026-11-10T13:21:32.467552",
+    "notes": "Постоянный бесплатный доступ для друга"
+  }
+]

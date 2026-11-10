@@ -81,3 +81,32 @@ class BookingResponse(BaseModel):
     success: bool
     message: str
     booking_id: str
+
+class LoginRequest(BaseModel):
+    login: str
+    password: str
+
+class UserCreateRequest(BaseModel):
+    agency_name: str
+    manager_name: Optional[str] = ""
+    login: str
+    password: str
+    phone: Optional[str] = ""
+    telegram: Optional[str] = ""
+    role: str = "user"
+    subscription_plan: str = "monthly"
+    price_paid: float = 0.0
+    notes: Optional[str] = ""
+
+class UserUpdateRequest(BaseModel):
+    agency_name: Optional[str] = None
+    manager_name: Optional[str] = None
+    password: Optional[str] = None
+    phone: Optional[str] = None
+    telegram: Optional[str] = None
+    role: Optional[str] = None
+    is_active: Optional[bool] = None
+    subscription_plan: Optional[str] = None
+    extend_days: Optional[int] = None
+    price_paid: Optional[float] = None
+    notes: Optional[str] = None
