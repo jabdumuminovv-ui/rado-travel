@@ -39,14 +39,14 @@ BOOKINGS_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), "bookin
 if os.path.exists(STATIC_DIR):
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
-@app.get("/", response_class=HTMLResponse)
+@app.api_route("/", methods=["GET", "HEAD"], response_class=HTMLResponse)
 async def index():
     index_file = os.path.join(STATIC_DIR, "index.html")
     if os.path.exists(index_file):
         return FileResponse(index_file)
-    return "<h1>TourHub API активен</h1>"
+    return "<h1>RaDo Travel API активен</h1>"
 
-@app.get("/api/operators")
+@app.api_route("/api/operators", methods=["GET", "HEAD"])
 async def get_operators():
     """Возвращает список подключенных туроператоров."""
     return service.get_registered_operators()
