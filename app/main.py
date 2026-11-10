@@ -80,7 +80,14 @@ def get_current_admin(user: Dict[str, Any] = Depends(get_current_user)) -> Dict[
 async def index():
     index_file = os.path.join(STATIC_DIR, "index.html")
     if os.path.exists(index_file):
-        return FileResponse(index_file)
+        return FileResponse(
+            index_file,
+            headers={
+                "Cache-Control": "no-cache, no-store, must-revalidate",
+                "Pragma": "no-cache",
+                "Expires": "0"
+            }
+        )
     return "<h1>RaDo Travel API активен</h1>"
 
 # --- ЭНДПОИНТЫ АВТОРИЗАЦИИ ---
