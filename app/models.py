@@ -43,6 +43,7 @@ class TourItem(BaseModel):
     flight_back_status: Optional[str] = "Y"
     is_available: bool = True
     is_red_row: bool = False
+    image_url: Optional[str] = None
 
 class HotelGroup(BaseModel):
     hotel_name: str
@@ -52,6 +53,7 @@ class HotelGroup(BaseModel):
     max_price: float
     currency: str
     variants_count: int
+    image_url: Optional[str] = None
     tours: List[TourItem]
 
 class SearchResponse(BaseModel):

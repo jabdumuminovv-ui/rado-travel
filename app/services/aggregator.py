@@ -285,6 +285,35 @@ class TourAggregatorService:
             logger.error(f"Ошибка в коннекторе {connector.name}: {e}")
             return []
 
+    def _resolve_hotel_image(self, hotel_name: str, resort: str) -> str:
+        h = hotel_name.lower()
+        r = resort.lower() if resort else ""
+        if "rixos" in h:
+            return "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=600&q=80"
+        if "atlantis" in h:
+            return "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=600&q=80"
+        if "hilton" in h:
+            return "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=600&q=80"
+        if "marriott" in h:
+            return "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?auto=format&fit=crop&w=600&q=80"
+        if "albatros" in h:
+            return "https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?auto=format&fit=crop&w=600&q=80"
+        if "radisson" in h:
+            return "https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=600&q=80"
+        if "sheraton" in h or "le meridien" in h:
+            return "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&w=600&q=80"
+        if "дубай" in r or "dubai" in r or "оаэ" in r:
+            return "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=600&q=80"
+        if "шарм" in r or "хургада" in r or "египет" in r:
+            return "https://images.unsplash.com/photo-1539650116574-8efeb43e2750?auto=format&fit=crop&w=600&q=80"
+        if "анталья" in r or "бодрум" in r or "турция" in r:
+            return "https://images.unsplash.com/photo-1527838832700-5059252407fa?auto=format&fit=crop&w=600&q=80"
+        if "мальдивы" in r or "maldives" in r:
+            return "https://images.unsplash.com/photo-1514282401047-d79a71a590e8?auto=format&fit=crop&w=600&q=80"
+        if "пхукет" in r or "паттайя" in r or "таиланд" in r:
+            return "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=600&q=80"
+        return "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=600&q=80"
+
     def _group_tours_by_hotel(self, tours: List[TourItem], sort_order: str = "price_asc") -> List[HotelGroup]:
         groups: Dict[str, List[TourItem]] = {}
 
@@ -307,6 +336,7 @@ class TourAggregatorService:
             max_p = max(prices)
 
             first = items_sorted[0]
+            hotel_img = self._resolve_hotel_image(first.hotel_name, first.resort)
             group = HotelGroup(
                 hotel_name=first.hotel_name,
                 hotel_stars=first.hotel_stars,
@@ -315,6 +345,7 @@ class TourAggregatorService:
                 max_price=max_p,
                 currency=first.currency,
                 variants_count=len(items_sorted),
+                image_url=hotel_img,
                 tours=items_sorted
             )
             result_groups.append(group)
