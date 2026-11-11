@@ -341,10 +341,10 @@
 
             </div>
 
-            <!-- Row 2: Nights, Tourists, Hotel Search, Stars, Meals, CTA -->
+            <!-- Row 2: Nights, Tourists, Stars, Meals, Hotel Search, CTA -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3.5 items-end pt-1">
               
-              <!-- Nights Range (lg:col-span-2) -->
+              <!-- 1. Nights Range (lg:col-span-2) -->
               <div class="lg:col-span-2">
                 <label class="block text-xs font-bold text-slate-700 mb-1.5"><i class="fa-solid fa-moon text-indigo-500 mr-1"></i> Ночей (от - до)</label>
                 <div class="grid grid-cols-2 gap-2">
@@ -353,56 +353,99 @@
                 </div>
               </div>
 
-              <!-- Tourists & Child Ages (lg:col-span-3) -->
-              <div class="lg:col-span-3">
-                <label class="block text-xs font-bold text-slate-700 mb-1.5"><i class="fa-solid fa-user-group text-sky-500 mr-1"></i> Взрослые + Дети</label>
-                <div class="grid grid-cols-2 gap-2">
-                  <select id="adults" class="w-full bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl px-2.5 py-2 text-xs font-bold focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none">
+              <!-- 2. Tourists & Child Ages (lg:col-span-2) -->
+              <div class="lg:col-span-2">
+                <label class="block text-xs font-bold text-slate-700 mb-1.5"><i class="fa-solid fa-user-group text-sky-500 mr-1"></i> Туристы</label>
+                <div class="grid grid-cols-2 gap-1.5">
+                  <select id="adults" class="w-full bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl px-2 py-2 text-xs font-bold focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none">
                     <option value="1">1 взр.</option>
                     <option value="2" selected>2 взр.</option>
                     <option value="3">3 взр.</option>
                     <option value="4">4 взр.</option>
                   </select>
-                  <select id="children_count" onchange="renderChildAgeInputs()" class="w-full bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl px-2.5 py-2 text-xs font-bold focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none">
-                    <option value="0" selected>0 детей</option>
-                    <option value="1">1 ребёнок</option>
-                    <option value="2">2 детей</option>
-                    <option value="3">3 детей</option>
+                  <select id="children_count" onchange="renderChildAgeInputs()" class="w-full bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl px-2 py-2 text-xs font-bold focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                    <option value="0" selected>0 дет.</option>
+                    <option value="1">1 реб.</option>
+                    <option value="2">2 дет.</option>
+                    <option value="3">3 дет.</option>
                   </select>
                 </div>
                 <!-- Dynamic Child Age Container -->
                 <div id="childAgesRow" class="hidden mt-2 p-2 bg-slate-50 border border-slate-200 rounded-xl flex items-center space-x-2">
-                  <span class="text-[11px] font-bold text-slate-500">Возраст детей:</span>
-                  <div id="childAgesContainer" class="flex items-center space-x-2"></div>
+                  <span class="text-[10px] font-bold text-slate-500">Возраст:</span>
+                  <div id="childAgesContainer" class="flex items-center space-x-1.5"></div>
                 </div>
               </div>
 
-              <!-- Hotel Name Filter Query (lg:col-span-3) -->
-              <div class="lg:col-span-3">
-                <label class="block text-xs font-bold text-slate-700 mb-1.5"><i class="fa-solid fa-hotel text-amber-500 mr-1"></i> Отель (необязательно)</label>
-                <input type="text" id="hotel_query" placeholder="Напр: Rixos, Atlantis, Hilton..." class="w-full bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl px-3 py-2 text-xs font-semibold focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none">
-              </div>
-
-              <!-- Meal & Stars (lg:col-span-2) -->
+              <!-- 3. Hotel Stars Selector (lg:col-span-2) -->
               <div class="lg:col-span-2">
-                <label class="block text-xs font-bold text-slate-700 mb-1.5"><i class="fa-solid fa-utensils text-emerald-500 mr-1"></i> Питание</label>
-                <select id="meal_filter" class="w-full bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl px-2.5 py-2 text-xs font-bold focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none">
-                  <option value="all" selected>Любое питание</option>
-                  <option value="UAI">UAI (Ультра всё включено)</option>
-                  <option value="AI">AI (Всё включено)</option>
-                  <option value="FB">FB (Полный пансион)</option>
-                  <option value="HB">HB (Завтрак + ужин)</option>
-                  <option value="BB">BB (Только завтрак)</option>
-                  <option value="RO">RO (Без питания)</option>
+                <label class="block text-xs font-bold text-amber-700 mb-1.5 flex items-center justify-between">
+                  <span><i class="fa-solid fa-star text-amber-500 mr-1"></i> Звёзды отеля</span>
+                </label>
+                <select id="stars_filter" onchange="syncStarChips(this.value)" class="w-full bg-amber-50/40 border border-amber-200 rounded-xl px-2.5 py-2 text-xs font-bold text-amber-950 focus:bg-white focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                  <option value="all" selected>🌟 Все категории</option>
+                  <option value="5">⭐⭐⭐⭐⭐ 5★ Премиум</option>
+                  <option value="4">⭐⭐⭐⭐ 4★ Комфорт</option>
+                  <option value="4_5">⭐⭐⭐⭐+ 4★ и 5★ (Высокий класс)</option>
+                  <option value="3">⭐⭐⭐ 3★ Стандарт</option>
+                  <option value="1_2">⭐ 1★ - 2★ / Апартаменты</option>
                 </select>
               </div>
 
-              <!-- CTA Search Button (lg:col-span-2) -->
+              <!-- 4. Meal Plan Selector (lg:col-span-2) -->
               <div class="lg:col-span-2">
-                <button type="submit" id="searchBtn" class="w-full bg-brand-500 hover:bg-brand-600 text-white font-bold py-2.5 px-4 rounded-xl text-xs shadow-sm shadow-brand-500/25 flex items-center justify-center space-x-2 transition">
+                <label class="block text-xs font-bold text-emerald-700 mb-1.5 flex items-center justify-between">
+                  <span><i class="fa-solid fa-utensils text-emerald-500 mr-1"></i> Питание</span>
+                </label>
+                <select id="meal_filter" onchange="syncMealChips(this.value)" class="w-full bg-emerald-50/40 border border-emerald-200 rounded-xl px-2.5 py-2 text-xs font-bold text-emerald-950 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                  <option value="all" selected>🍽 Любое питание</option>
+                  <option value="ALL_INCLUSIVE">🍹 Всё включено (AI + UAI)</option>
+                  <option value="UAI">👑 Ультра всё включено (UAI)</option>
+                  <option value="AI">🍸 Всё включено (AI)</option>
+                  <option value="FB">🥗 Полный пансион (FB)</option>
+                  <option value="HB">🍳 Завтрак + ужин (HB)</option>
+                  <option value="BB">☕ Только завтрак (BB)</option>
+                  <option value="RO">🛏 Без питания (RO)</option>
+                </select>
+              </div>
+
+              <!-- 5. Hotel Name Filter Query (lg:col-span-2) -->
+              <div class="lg:col-span-2">
+                <label class="block text-xs font-bold text-slate-700 mb-1.5"><i class="fa-solid fa-hotel text-indigo-500 mr-1"></i> Отель (поиск)</label>
+                <input type="text" id="hotel_query" placeholder="Rixos, Hilton, Albatros..." class="w-full bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl px-3 py-2 text-xs font-semibold focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none">
+              </div>
+
+              <!-- 6. CTA Search Button (lg:col-span-2) -->
+              <div class="lg:col-span-2">
+                <button type="submit" id="searchBtn" class="w-full bg-brand-500 hover:bg-brand-600 text-white font-bold py-2 px-3 rounded-xl text-xs shadow-sm shadow-brand-500/25 flex items-center justify-center space-x-2 transition h-[38px]">
                   <i class="fa-solid fa-magnifying-glass"></i>
                   <span>Найти туры</span>
                 </button>
+              </div>
+
+            </div>
+
+            <!-- Быстрые чипы-фильтры звёзд и питания (Quick Chips) -->
+            <div class="pt-2.5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs">
+              
+              <!-- Быстрый выбор звёзд -->
+              <div class="flex flex-wrap items-center gap-1.5">
+                <span class="text-[11px] font-bold text-slate-500 mr-1"><i class="fa-solid fa-star text-amber-500 mr-0.5"></i> Звёзды:</span>
+                <button type="button" onclick="selectStarChip('all')" id="chip-star-all" class="star-chip px-2.5 py-1 rounded-lg text-xs font-bold transition bg-brand-500 text-white shadow-sm">Все</button>
+                <button type="button" onclick="selectStarChip('5')" id="chip-star-5" class="star-chip px-2.5 py-1 rounded-lg text-xs font-bold transition bg-slate-100 hover:bg-slate-200 text-slate-700">5★ Премиум</button>
+                <button type="button" onclick="selectStarChip('4')" id="chip-star-4" class="star-chip px-2.5 py-1 rounded-lg text-xs font-bold transition bg-slate-100 hover:bg-slate-200 text-slate-700">4★</button>
+                <button type="button" onclick="selectStarChip('4_5')" id="chip-star-4_5" class="star-chip px-2.5 py-1 rounded-lg text-xs font-bold transition bg-slate-100 hover:bg-slate-200 text-slate-700">4★ и 5★</button>
+                <button type="button" onclick="selectStarChip('3')" id="chip-star-3" class="star-chip px-2.5 py-1 rounded-lg text-xs font-bold transition bg-slate-100 hover:bg-slate-200 text-slate-700">3★</button>
+              </div>
+
+              <!-- Быстрый выбор питания -->
+              <div class="flex flex-wrap items-center gap-1.5">
+                <span class="text-[11px] font-bold text-slate-500 mr-1"><i class="fa-solid fa-utensils text-emerald-500 mr-0.5"></i> Питание:</span>
+                <button type="button" onclick="selectMealChip('all')" id="chip-meal-all" class="meal-chip px-2.5 py-1 rounded-lg text-xs font-bold transition bg-brand-500 text-white shadow-sm">Любое</button>
+                <button type="button" onclick="selectMealChip('ALL_INCLUSIVE')" id="chip-meal-ALL_INCLUSIVE" class="meal-chip px-2.5 py-1 rounded-lg text-xs font-bold transition bg-slate-100 hover:bg-slate-200 text-slate-700">🍹 Всё включено (AI/UAI)</button>
+                <button type="button" onclick="selectMealChip('HB')" id="chip-meal-HB" class="meal-chip px-2.5 py-1 rounded-lg text-xs font-bold transition bg-slate-100 hover:bg-slate-200 text-slate-700">🍳 Завтрак + Ужин (HB)</button>
+                <button type="button" onclick="selectMealChip('BB')" id="chip-meal-BB" class="meal-chip px-2.5 py-1 rounded-lg text-xs font-bold transition bg-slate-100 hover:bg-slate-200 text-slate-700">☕ Только завтрак (BB)</button>
+                <button type="button" onclick="selectMealChip('FB')" id="chip-meal-FB" class="meal-chip px-2.5 py-1 rounded-lg text-xs font-bold transition bg-slate-100 hover:bg-slate-200 text-slate-700">🥗 Полный пансион (FB)</button>
               </div>
 
             </div>
@@ -476,6 +519,30 @@
         <!-- Operator Tabs Filter Bar (Populated dynamically) -->
         <div id="operatorTabsBar" class="hidden bg-white border border-[#E8ECF3] p-2.5 rounded-2xl card-shadow overflow-x-auto">
           <div class="flex items-center space-x-2" id="operatorTabsContainer"></div>
+        </div>
+
+        <!-- Live Results Filter Strip: Stars & Meals instant filter -->
+        <div id="liveFiltersBar" class="hidden bg-white border border-[#E8ECF3] p-3 rounded-2xl card-shadow flex flex-wrap items-center justify-between gap-3 text-xs">
+          
+          <!-- Live Stars Filter -->
+          <div class="flex flex-wrap items-center gap-1.5" id="liveStarsContainer">
+            <span class="text-[11px] font-bold text-slate-500 mr-1"><i class="fa-solid fa-star text-amber-500 mr-0.5"></i> Фильтр звёзд:</span>
+            <button onclick="setLiveStarFilter('all')" id="live-star-all" class="live-star-btn px-2.5 py-1 rounded-lg font-bold transition bg-brand-500 text-white shadow-sm">Все отели</button>
+            <button onclick="setLiveStarFilter('5')" id="live-star-5" class="live-star-btn px-2.5 py-1 rounded-lg font-bold transition bg-slate-100 hover:bg-slate-200 text-slate-700">⭐⭐⭐⭐⭐ 5★</button>
+            <button onclick="setLiveStarFilter('4')" id="live-star-4" class="live-star-btn px-2.5 py-1 rounded-lg font-bold transition bg-slate-100 hover:bg-slate-200 text-slate-700">⭐⭐⭐⭐ 4★</button>
+            <button onclick="setLiveStarFilter('3')" id="live-star-3" class="live-star-btn px-2.5 py-1 rounded-lg font-bold transition bg-slate-100 hover:bg-slate-200 text-slate-700">⭐⭐⭐ 3★</button>
+          </div>
+
+          <!-- Live Meal Filter -->
+          <div class="flex flex-wrap items-center gap-1.5" id="liveMealsContainer">
+            <span class="text-[11px] font-bold text-slate-500 mr-1"><i class="fa-solid fa-utensils text-emerald-500 mr-0.5"></i> Питание:</span>
+            <button onclick="setLiveMealFilter('all')" id="live-meal-all" class="live-meal-btn px-2.5 py-1 rounded-lg font-bold transition bg-brand-500 text-white shadow-sm">Любое</button>
+            <button onclick="setLiveMealFilter('ALL_INCLUSIVE')" id="live-meal-ALL_INCLUSIVE" class="live-meal-btn px-2.5 py-1 rounded-lg font-bold transition bg-slate-100 hover:bg-slate-200 text-slate-700">🍹 Всё включено (AI/UAI)</button>
+            <button onclick="setLiveMealFilter('HB')" id="live-meal-HB" class="live-meal-btn px-2.5 py-1 rounded-lg font-bold transition bg-slate-100 hover:bg-slate-200 text-slate-700">🍳 HB (Завтрак+ужин)</button>
+            <button onclick="setLiveMealFilter('BB')" id="live-meal-BB" class="live-meal-btn px-2.5 py-1 rounded-lg font-bold transition bg-slate-100 hover:bg-slate-200 text-slate-700">☕ BB (Завтраки)</button>
+            <button onclick="setLiveMealFilter('FB')" id="live-meal-FB" class="live-meal-btn px-2.5 py-1 rounded-lg font-bold transition bg-slate-100 hover:bg-slate-200 text-slate-700">🥗 FB (3-разовое)</button>
+          </div>
+
         </div>
 
         <!-- Results Container (Cards View or Table View) -->
@@ -1419,6 +1486,7 @@
       const children = parseInt(document.getElementById('children_count').value, 10);
       const hotelQuery = document.getElementById('hotel_query').value.trim();
       const mealFilter = document.getElementById('meal_filter').value;
+      const starsFilter = document.getElementById('stars_filter')?.value || 'all';
       const onlyFlights = document.getElementById('only_available_flights').checked;
 
       // Format dates DD.MM.YYYY
@@ -1449,6 +1517,7 @@
         currency: "USD",
         only_available_flights: onlyFlights,
         meal_filter: mealFilter === 'all' ? null : mealFilter,
+        stars_filter: starsFilter === 'all' ? null : starsFilter,
         sort_order: document.getElementById('sort_order').value
       };
 
@@ -1506,6 +1575,7 @@
         statusText.innerHTML = `Найдено <strong>${data.total_hotels}</strong> отелей (всего <strong>${data.total_tours}</strong> вылетов) среди операторов: <span class="text-emerald-700 font-bold">${opsList}</span>`;
         
         resultFilterBar.classList.remove('hidden');
+        document.getElementById('liveFiltersBar')?.classList.remove('hidden');
         document.getElementById('hotelsCountTotal').textContent = data.total_hotels;
         
         buildOperatorTabs(allHotelGroups);
@@ -2404,17 +2474,8 @@
     }
 
     // --- QUICK LIVE FILTER FOR HOTELS ---
-    document.getElementById('hotelFilterInput')?.addEventListener('input', (e) => {
-      const q = e.target.value.toLowerCase().trim();
-      if (!q) {
-        renderHotels(allHotelGroups);
-        return;
-      }
-      const filtered = allHotelGroups.filter(g => 
-        g.hotel_name.toLowerCase().includes(q) || 
-        (g.resort && g.resort.toLowerCase().includes(q))
-      );
-      renderHotels(filtered);
+    document.getElementById('hotelFilterInput')?.addEventListener('input', () => {
+      applyLiveFilters();
     });
 
     // --- INITIALIZE APPLICATION ON DOM READY ---
@@ -2423,7 +2484,125 @@
       initAuth();
       loadOperatorsCatalog();
     });
-  </script>
+  
+    // ==========================================
+    // ЛОГИКА БЫСТРЫХ ЧИПОВ И ЖИВЫХ ФИЛЬТРОВ (Stars & Meals)
+    // ==========================================
+    let activeLiveStarFilter = 'all';
+    let activeLiveMealFilter = 'all';
+
+    function selectStarChip(val) {
+      const select = document.getElementById('stars_filter');
+      if (select) select.value = val;
+      syncStarChips(val);
+    }
+
+    function syncStarChips(val) {
+      document.querySelectorAll('.star-chip').forEach(btn => {
+        btn.className = 'star-chip px-2.5 py-1 rounded-lg text-xs font-bold transition bg-slate-100 hover:bg-slate-200 text-slate-700';
+      });
+      const activeBtn = document.getElementById(`chip-star-${val}`);
+      if (activeBtn) {
+        activeBtn.className = 'star-chip px-2.5 py-1 rounded-lg text-xs font-bold transition bg-brand-500 text-white shadow-sm';
+      }
+    }
+
+    function selectMealChip(val) {
+      const select = document.getElementById('meal_filter');
+      if (select) select.value = val;
+      syncMealChips(val);
+    }
+
+    function syncMealChips(val) {
+      document.querySelectorAll('.meal-chip').forEach(btn => {
+        btn.className = 'meal-chip px-2.5 py-1 rounded-lg text-xs font-bold transition bg-slate-100 hover:bg-slate-200 text-slate-700';
+      });
+      const activeBtn = document.getElementById(`chip-meal-${val}`);
+      if (activeBtn) {
+        activeBtn.className = 'meal-chip px-2.5 py-1 rounded-lg text-xs font-bold transition bg-brand-500 text-white shadow-sm';
+      }
+    }
+
+    // Живой фильтр по результатам (без повторного запроса к серверу)
+    function setLiveStarFilter(val) {
+      activeLiveStarFilter = val;
+      document.querySelectorAll('.live-star-btn').forEach(btn => {
+        btn.className = 'live-star-btn px-2.5 py-1 rounded-lg font-bold transition bg-slate-100 hover:bg-slate-200 text-slate-700';
+      });
+      const activeBtn = document.getElementById(`live-star-${val}`);
+      if (activeBtn) {
+        activeBtn.className = 'live-star-btn px-2.5 py-1 rounded-lg font-bold transition bg-brand-500 text-white shadow-sm';
+      }
+      applyLiveFilters();
+    }
+
+    function setLiveMealFilter(val) {
+      activeLiveMealFilter = val;
+      document.querySelectorAll('.live-meal-btn').forEach(btn => {
+        btn.className = 'live-meal-btn px-2.5 py-1 rounded-lg font-bold transition bg-slate-100 hover:bg-slate-200 text-slate-700';
+      });
+      const activeBtn = document.getElementById(`live-meal-${val}`);
+      if (activeBtn) {
+        activeBtn.className = 'live-meal-btn px-2.5 py-1 rounded-lg font-bold transition bg-brand-500 text-white shadow-sm';
+      }
+      applyLiveFilters();
+    }
+
+    function applyLiveFilters() {
+      if (!allHotelGroups || allHotelGroups.length === 0) return;
+
+      const q = (document.getElementById('hotelFilterInput')?.value || '').toLowerCase().trim();
+
+      const filtered = allHotelGroups.map(g => {
+        // 1. Фильтр оператора
+        let matchingTours = g.tours;
+        if (activeOperatorFilter !== 'all') {
+          matchingTours = matchingTours.filter(t => t.operator_name === activeOperatorFilter);
+        }
+
+        // 2. Фильтр звёзд
+        if (activeLiveStarFilter !== 'all') {
+          const sf = activeLiveStarFilter;
+          const hs = (g.hotel_stars || '').toUpperCase();
+          if (sf === '5' && !hs.includes('5')) return null;
+          if (sf === '4' && !hs.includes('4')) return null;
+          if (sf === '3' && !hs.includes('3')) return null;
+        }
+
+        // 3. Фильтр питания (по турам)
+        if (activeLiveMealFilter !== 'all') {
+          const mf = activeLiveMealFilter.toUpperCase();
+          matchingTours = matchingTours.filter(t => {
+            const mt = (t.meal_type || '').toUpperCase();
+            if (mf === 'ALL_INCLUSIVE') {
+              return mt.includes('AI') || mt.includes('UAI') || mt.includes('ВСЁ ВКЛЮЧЕНО') || mt.includes('ULTRA');
+            }
+            return mt.includes(mf);
+          });
+        }
+
+        if (matchingTours.length === 0) return null;
+
+        // 4. Поисковый запрос отеля
+        if (q) {
+          const matchHotel = g.hotel_name.toLowerCase().includes(q) || (g.resort && g.resort.toLowerCase().includes(q));
+          if (!matchHotel) return null;
+        }
+
+        const prices = matchingTours.map(t => t.price);
+        return {
+          ...g,
+          min_price: Math.min(...prices),
+          max_price: Math.max(...prices),
+          variants_count: matchingTours.length,
+          tours: matchingTours
+        };
+      }).filter(Boolean);
+
+      renderHotels(filtered);
+    }
+
+</script>
 
 </body>
 </html>

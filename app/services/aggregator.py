@@ -259,13 +259,62 @@ class TourAggregatorService:
 
         # Фильтрация по питанию / звездам
         filtered_tours = all_tours
-        if params.meal_filter and params.meal_filter.upper() != "ALL":
-            mf = params.meal_filter.upper()
-            filtered_tours = [t for t in filtered_tours if mf in t.meal_type.upper()]
 
+        # 1. Фильтрация по звёздности отеля
         if params.stars_filter and params.stars_filter.upper() != "ALL":
-            sf = params.stars_filter.upper()
-            filtered_tours = [t for t in filtered_tours if sf in t.hotel_stars.upper()]
+            sf = params.stars_filter.strip().upper()
+            allowed_stars = []
+            if sf in ["5", "5*", "5★"]:
+                allowed_stars = ["5*", "5", "5★", "DELUXE"]
+            elif sf in ["4", "4*", "4★"]:
+                allowed_stars = ["4*", "4", "4★"]
+            elif sf in ["3", "3*", "3★"]:
+                allowed_stars = ["3*", "3", "3★"]
+            elif sf in ["4_5", "4,5", "4-5"]:
+                allowed_stars = ["5*", "5", "5★", "DELUXE", "4*", "4", "4★"]
+            elif sf in ["1_2", "1,2", "1-2"]:
+                allowed_stars = ["1*", "2*", "1", "2", "HV-2", "APARTMENT"]
+            else:
+                allowed_stars = [sf]
+
+            def match_stars(hotel_stars: str) -> bool:
+                hs = (hotel_stars or "").upper()
+                for target in allowed_stars:
+                    if target in hs:
+                        return True
+                return False
+
+            filtered_tours = [t for t in filtered_tours if match_stars(t.hotel_stars)]
+
+        # 2. Фильтрация по типу питания
+        if params.meal_filter and params.meal_filter.upper() != "ALL":
+            mf = params.meal_filter.strip().upper()
+            allowed_meals = []
+            if mf in ["ALL_INCLUSIVE", "ALL-INCLUSIVE", "AI_UAI", "ALL_INC"]:
+                allowed_meals = ["AI", "UAI", "ВСЁ ВКЛЮЧЕНО", "ALL INCLUSIVE", "ULTRA"]
+            elif mf == "UAI":
+                allowed_meals = ["UAI", "ULTRA"]
+            elif mf == "AI":
+                allowed_meals = ["AI", "ALL INCLUSIVE", "ВСЁ ВКЛЮЧЕНО"]
+            elif mf == "FB":
+                allowed_meals = ["FB", "FULL BOARD", "ПОЛНЫЙ ПАНСИОН"]
+            elif mf == "HB":
+                allowed_meals = ["HB", "HALF BOARD", "ПОЛУПАНСИОН"]
+            elif mf == "BB":
+                allowed_meals = ["BB", "BED & BREAKFAST", "ЗАВТРАК"]
+            elif mf in ["RO", "ROOM ONLY"]:
+                allowed_meals = ["RO", "ROOM ONLY", "БЕЗ ПИТАНИЯ", "SC", "BO"]
+            else:
+                allowed_meals = [m.strip() for m in mf.split(",") if m.strip()]
+
+            def match_meal(meal_type: str) -> bool:
+                mt = (meal_type or "").upper()
+                for target in allowed_meals:
+                    if target == mt or target in mt:
+                        return True
+                return False
+
+            filtered_tours = [t for t in filtered_tours if match_meal(t.meal_type)]
 
         # Группировка по отелям
         hotel_groups = self._group_tours_by_hotel(filtered_tours, params.sort_order)
