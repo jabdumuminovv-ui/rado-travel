@@ -120,6 +120,25 @@ class SamoConnector(BaseTourConnector):
         if params.only_available_flights:
             query_params["FREIGHT"] = "1"
 
+        # Фильтр по звёздам отеля напрямую в запросе к SAMO-soft
+        if params.stars_filter and params.stars_filter.upper() != "ALL":
+            sf = params.stars_filter.strip().upper()
+            if sf in ["5", "5*", "5★"]:
+                query_params["STARS"] = "5,6,10001"
+                query_params["STARS_SEL"] = "1"
+            elif sf in ["4", "4*", "4★"]:
+                query_params["STARS"] = "4,5,10002"
+                query_params["STARS_SEL"] = "1"
+            elif sf in ["3", "3*", "3★"]:
+                query_params["STARS"] = "3,4,10006"
+                query_params["STARS_SEL"] = "1"
+            elif sf in ["4_5", "4,5", "4-5"]:
+                query_params["STARS"] = "4,5,6,10001,10002"
+                query_params["STARS_SEL"] = "1"
+            elif sf in ["1_2", "1,2", "1-2"]:
+                query_params["STARS"] = "1,2,10005"
+                query_params["STARS_SEL"] = "1"
+
         # Фильтр по названию отеля (Rixos, Albatros и др.)
         if params.hotel_query and params.hotel_query.strip():
             hotel_ids = await self._get_hotel_ids_by_name(town_id, state_id, params.hotel_query)

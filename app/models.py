@@ -62,6 +62,11 @@ class SearchResponse(BaseModel):
     operators_queried: List[str]
     operators_successful: List[str]
     hotels: List[HotelGroup]
+    raw_tours_count: Optional[int] = 0
+    available_meals_found: Optional[List[str]] = []
+    available_stars_found: Optional[List[str]] = []
+    filter_warning: Optional[str] = None
+    raw_hotels: Optional[List[HotelGroup]] = []
 
 class BookingRequest(BaseModel):
     client_name: str

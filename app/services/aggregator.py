@@ -257,6 +257,10 @@ class TourAggregatorService:
                 successful_ops.append(connector.name)
                 all_tours.extend(tours)
 
+        # Сохраняем доступные категории звезд и типы питания до фильтрации
+        available_meals = sorted(list(set(t.meal_type.strip().upper() for t in all_tours if t.meal_type)))
+        available_stars = sorted(list(set(t.hotel_stars.strip().upper() for t in all_tours if t.hotel_stars)))
+
         # Фильтрация по питанию / звездам
         filtered_tours = all_tours
 
@@ -291,19 +295,19 @@ class TourAggregatorService:
             mf = params.meal_filter.strip().upper()
             allowed_meals = []
             if mf in ["ALL_INCLUSIVE", "ALL-INCLUSIVE", "AI_UAI", "ALL_INC"]:
-                allowed_meals = ["AI", "UAI", "ВСЁ ВКЛЮЧЕНО", "ALL INCLUSIVE", "ULTRA"]
+                allowed_meals = ["AI", "UAI", "ВСЁ ВКЛЮЧЕНО", "ALL INCLUSIVE", "ULTRA", "PREMIUM ALL INCLUSIVE", "HIGH CLASS ALL INCLUSIVE"]
             elif mf == "UAI":
-                allowed_meals = ["UAI", "ULTRA"]
+                allowed_meals = ["UAI", "ULTRA", "PREMIUM ALL INCLUSIVE", "HIGH CLASS ALL INCLUSIVE", "DELUXE ALL INCLUSIVE", "AI+"]
             elif mf == "AI":
                 allowed_meals = ["AI", "ALL INCLUSIVE", "ВСЁ ВКЛЮЧЕНО"]
             elif mf == "FB":
-                allowed_meals = ["FB", "FULL BOARD", "ПОЛНЫЙ ПАНСИОН"]
+                allowed_meals = ["FB", "FULL BOARD", "ПОЛНЫЙ ПАНСИОН", "FB+"]
             elif mf == "HB":
-                allowed_meals = ["HB", "HALF BOARD", "ПОЛУПАНСИОН"]
+                allowed_meals = ["HB", "HALF BOARD", "ПОЛУПАНСИОН", "HB+"]
             elif mf == "BB":
-                allowed_meals = ["BB", "BED & BREAKFAST", "ЗАВТРАК"]
+                allowed_meals = ["BB", "BED & BREAKFAST", "ЗАВТРАК", "BB+", "BB+HB"]
             elif mf in ["RO", "ROOM ONLY"]:
-                allowed_meals = ["RO", "ROOM ONLY", "БЕЗ ПИТАНИЯ", "SC", "BO"]
+                allowed_meals = ["RO", "ROOM ONLY", "БЕЗ ПИТАНИЯ", "SC", "BO", "EP"]
             else:
                 allowed_meals = [m.strip() for m in mf.split(",") if m.strip()]
 
@@ -316,6 +320,17 @@ class TourAggregatorService:
 
             filtered_tours = [t for t in filtered_tours if match_meal(t.meal_type)]
 
+        # Проверка отсечения фильтрами
+        filter_warning = None
+        raw_hotels_group = []
+        if all_tours and not filtered_tours:
+            raw_hotels_group = self._group_tours_by_hotel(all_tours, params.sort_order)
+            meals_str = ", ".join(available_meals[:5]) if available_meals else "другие варианты"
+            if params.meal_filter and params.meal_filter.upper() != "ALL":
+                filter_warning = f"Туроператоры нашли {len(all_tours)} предложений на эти даты, но с типом питания '{params.meal_filter}' туров нет. На этом направлении отели предлагают: {meals_str}."
+            elif params.stars_filter and params.stars_filter.upper() != "ALL":
+                filter_warning = f"Туроператоры нашли {len(all_tours)} предложений, но в категории звёзд '{params.stars_filter}' отелей нет. Доступные категории: {', '.join(available_stars[:5])}."
+
         # Группировка по отелям
         hotel_groups = self._group_tours_by_hotel(filtered_tours, params.sort_order)
 
@@ -324,7 +339,12 @@ class TourAggregatorService:
             total_hotels=len(hotel_groups),
             operators_queried=[c.name for c in connectors_to_run],
             operators_successful=successful_ops,
-            hotels=hotel_groups
+            hotels=hotel_groups,
+            raw_tours_count=len(all_tours),
+            available_meals_found=available_meals,
+            available_stars_found=available_stars,
+            filter_warning=filter_warning,
+            raw_hotels=raw_hotels_group
         )
 
     async def _safe_connector_search(self, connector: BaseTourConnector, params: SearchParams) -> List[TourItem]:

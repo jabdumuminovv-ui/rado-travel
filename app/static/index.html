@@ -1561,6 +1561,7 @@
         }
 
         const data = await response.json();
+        window.lastSearchResponse = data;
         spinner.classList.add('hidden');
         searchBtn.disabled = false;
         searchBtn.classList.remove('opacity-70');
@@ -1677,6 +1678,31 @@
     function renderHotels(groups) {
       const container = document.getElementById('hotelsList');
       if (!groups || groups.length === 0) {
+        if (window.lastSearchResponse && window.lastSearchResponse.filter_warning) {
+          const availMeals = (window.lastSearchResponse.available_meals_found || []).join(', ');
+          container.innerHTML = `
+            <div class="bg-gradient-to-br from-amber-50 to-orange-50/50 rounded-2xl p-8 text-center border border-amber-200 card-shadow max-w-2xl mx-auto my-4 animate-fade-in">
+              <div class="w-14 h-14 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center text-2xl mx-auto mb-3 shadow-inner">
+                <i class="fa-solid fa-utensils"></i>
+              </div>
+              <h3 class="text-base font-bold text-amber-950">${window.lastSearchResponse.filter_warning}</h3>
+              <p class="text-xs text-amber-800/80 mt-2 max-w-md mx-auto">
+                Туроператоры нашли <strong>${window.lastSearchResponse.raw_tours_count || 0}</strong> туров. Вы можете в 1 клик посмотреть все найденные варианты без строгого ограничения по питанию:
+              </p>
+              <div class="mt-5 flex flex-wrap items-center justify-center gap-2.5">
+                <button type="button" onclick="showAllRawTours()" class="px-5 py-2.5 bg-brand-500 hover:bg-brand-600 text-white rounded-xl text-xs font-bold transition shadow-sm flex items-center space-x-1.5 cursor-pointer">
+                  <i class="fa-solid fa-eye"></i>
+                  <span>Показать все найденные туры (${window.lastSearchResponse.raw_tours_count || 0})</span>
+                </button>
+                <button type="button" onclick="quickApplyAvailableMeal()" class="px-4 py-2.5 bg-white hover:bg-slate-50 text-amber-900 border border-amber-300 rounded-xl text-xs font-bold transition cursor-pointer">
+                  <i class="fa-solid fa-mug-saucer mr-1"></i> Выбрать доступное питание
+                </button>
+              </div>
+            </div>
+          `;
+          return;
+        }
+
         container.innerHTML = `
           <div class="bg-white rounded-2xl p-12 text-center border border-[#E8ECF3] card-shadow">
             <div class="w-12 h-12 rounded-xl bg-slate-100 text-slate-400 flex items-center justify-center text-xl mx-auto mb-3">
@@ -1693,6 +1719,32 @@
         renderHotelsAsTable(groups, container);
       } else {
         renderHotelsAsCards(groups, container);
+      }
+    }
+
+    function showAllRawTours() {
+      if (window.lastSearchResponse && window.lastSearchResponse.raw_hotels && window.lastSearchResponse.raw_hotels.length > 0) {
+        allHotelGroups = window.lastSearchResponse.raw_hotels;
+        selectMealChip('all');
+        selectStarChip('all');
+        buildOperatorTabs(allHotelGroups);
+        renderHotels(allHotelGroups);
+        showToast(`Показано ${window.lastSearchResponse.raw_tours_count || 0} туров`);
+      } else {
+        document.getElementById('meal_filter').value = 'all';
+        syncMealChips('all');
+        document.getElementById('searchForm').dispatchEvent(new Event('submit'));
+      }
+    }
+
+    function quickApplyAvailableMeal() {
+      if (window.lastSearchResponse && window.lastSearchResponse.available_meals_found && window.lastSearchResponse.available_meals_found.length > 0) {
+        const first = window.lastSearchResponse.available_meals_found[0];
+        document.getElementById('meal_filter').value = first;
+        syncMealChips(first);
+        document.getElementById('searchForm').dispatchEvent(new Event('submit'));
+      } else {
+        showAllRawTours();
       }
     }
 
