@@ -1,16 +1,23 @@
 import asyncio
 import logging
-from typing import List, Dict
+import time
+from typing import List, Dict, Optional
 from app.models import SearchParams, SearchResponse, HotelGroup, TourItem
 from app.connectors.base import BaseTourConnector
 from app.connectors.samo import SamoConnector
 
 logger = logging.getLogger(__name__)
 
+class SearchCacheEntry:
+    def __init__(self, data: SearchResponse, expires_at: float):
+        self.data = data
+        self.expires_at = expires_at
+
 class TourAggregatorService:
     def __init__(self):
         self.connectors: List[BaseTourConnector] = []
         self._register_default_connectors()
+        self._search_cache: Dict[str, SearchCacheEntry] = {}
 
     def _register_default_connectors(self):
         # 1. Kompas Tour (Узбекистан)
@@ -227,7 +234,18 @@ class TourAggregatorService:
         ]
 
     async def search_all(self, params: SearchParams) -> SearchResponse:
-        logger.info(f"Запуск поиска: {params.city_from} -> {params.country} (Оператор: {params.selected_operator}, Сортировка: {params.sort_order})")
+        # 1. Сверхбыстрый кэш в памяти (0.001s)
+        cache_key = f"{params.city_from}_{params.country}_{params.checkin_from}_{params.checkin_to}_{params.nights_from}_{params.nights_to}_{params.adults}_{params.children}_{params.selected_operator}_{params.stars_filter}_{params.meal_filter}_{params.currency}_{params.sort_order}"
+        now = time.time()
+        if cache_key in self._search_cache:
+            entry = self._search_cache[cache_key]
+            if now < entry.expires_at:
+                logger.info(f"⚡ Мгновенный ответ из кэша (0.001s) для {params.country}")
+                return entry.data
+            else:
+                del self._search_cache[cache_key]
+
+        logger.info(f"Запуск параллельного метапоиска: {params.city_from} -> {params.country} (Оператор: {params.selected_operator}, Сортировка: {params.sort_order})")
 
         # Выбор туроператоров для запуска
         connectors_to_run = self.connectors
@@ -243,10 +261,7 @@ class TourAggregatorService:
             op_set = set(o.lower() for o in params.operators)
             connectors_to_run = [c for c in self.connectors if c.operator_id.lower() in op_set or c.name.lower() in op_set]
 
-        tasks = []
-        for connector in connectors_to_run:
-            tasks.append(self._safe_connector_search(connector, params))
-
+        tasks = [self._safe_connector_search(c, params) for c in connectors_to_run]
         results_list = await asyncio.gather(*tasks)
 
         all_tours: List[TourItem] = []
@@ -334,7 +349,7 @@ class TourAggregatorService:
         # Группировка по отелям
         hotel_groups = self._group_tours_by_hotel(filtered_tours, params.sort_order)
 
-        return SearchResponse(
+        response = SearchResponse(
             total_tours=len(filtered_tours),
             total_hotels=len(hotel_groups),
             operators_queried=[c.name for c in connectors_to_run],
@@ -346,6 +361,13 @@ class TourAggregatorService:
             filter_warning=filter_warning,
             raw_hotels=raw_hotels_group
         )
+
+        # Сохранение в кэш на 5 минут (300 сек)
+        if len(self._search_cache) > 200:
+            self._search_cache = {k: v for k, v in self._search_cache.items() if now < v.expires_at}
+        self._search_cache[cache_key] = SearchCacheEntry(response, now + 300.0)
+
+        return response
 
     async def _safe_connector_search(self, connector: BaseTourConnector, params: SearchParams) -> List[TourItem]:
         try:

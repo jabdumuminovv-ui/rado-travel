@@ -34,6 +34,14 @@ class SamoConnector(BaseTourConnector):
             "KZT": "1"
         }
         self._hotel_cache: Dict[str, List[Dict]] = {}
+        self._client: Optional[httpx.AsyncClient] = None
+
+    def _get_client(self) -> httpx.AsyncClient:
+        if self._client is None or self._client.is_closed:
+            limits = httpx.Limits(max_keepalive_connections=15, max_connections=30, keepalive_expiry=300.0)
+            timeout = httpx.Timeout(connect=10.0, read=25.0, write=10.0, pool=10.0)
+            self._client = httpx.AsyncClient(limits=limits, timeout=timeout, verify=False)
+        return self._client
 
     def is_city_supported(self, city_name: str) -> bool:
         return city_name.strip().lower() in self.towns_map
@@ -50,13 +58,13 @@ class SamoConnector(BaseTourConnector):
                 "STATEINC": state_id
             }
             try:
-                async with httpx.AsyncClient(timeout=15.0, verify=False) as client:
-                    resp = await client.get(url, params=params)
-                    if resp.status_code == 200:
-                        m = re.search(r'samo\.hotelDynamic\s*=\s*(\[.*?\]);', resp.text, re.DOTALL)
-                        if m:
-                            hotels = json.loads(m.group(1))
-                            self._hotel_cache[cache_key] = hotels
+                client = self._get_client()
+                resp = await client.get(url, params=params)
+                if resp.status_code == 200:
+                    m = re.search(r'samo\.hotelDynamic\s*=\s*(\[.*?\]);', resp.text, re.DOTALL)
+                    if m:
+                        hotels = json.loads(m.group(1))
+                        self._hotel_cache[cache_key] = hotels
             except Exception as e:
                 logger.warning(f"[{self.name}] Ошибка получения hotelDynamic: {e}")
                 hotels = []
@@ -157,11 +165,11 @@ class SamoConnector(BaseTourConnector):
         logger.info(f"[{self.name}] Поиск: {params.city_from} -> {params.country} ({params.checkin_from}-{params.checkin_to}) Взр:{params.adults}, Дет:{params.children}")
 
         try:
-            async with httpx.AsyncClient(timeout=25.0, verify=False) as client:
-                resp = await client.get(url, params=query_params, headers=headers)
-                if resp.status_code != 200:
-                    return []
-                content = resp.text
+            client = self._get_client()
+            resp = await client.get(url, params=query_params, headers=headers)
+            if resp.status_code != 200:
+                return []
+            content = resp.text
         except Exception as e:
             logger.error(f"[{self.name}] Ошибка сети: {e}")
             return []
@@ -179,21 +187,54 @@ class SamoConnector(BaseTourConnector):
             return []
 
         soup = BeautifulSoup(html, "html.parser")
-        rows = soup.find_all("tr", class_=lambda c: c and "price_info" in c)
+        rows = soup.find_all("tr")
 
         tours: List[TourItem] = []
 
         for row in rows:
-            try:
-                row_classes = row.get("class", [])
-                is_red_row = "red_row" in row_classes
+            row_classes = row.get("class", [])
+            if "price_info" not in row_classes:
+                continue
 
+            try:
+                is_red_row = "red_row" in row_classes
                 cat_claim = row.get("data-cat-claim", "")
                 hotel_name_attr = row.get("data-hotel-name", "").strip()
 
-                arrival_td = row.find("td", class_=lambda c: c and any(k in c for k in ["arrival", "sortie", "checkin", "date"]))
+                arrival_td = None
+                tour_td = None
+                nights_td = None
+                hotel_td = None
+                meal_td = None
+                room_td = None
+                transport_td = None
+                price_span = None
+
+                tds = row.find_all("td")
+                for td in tds:
+                    c_str = " ".join(td.get("class", []))
+                    if "link-hotel" in c_str:
+                        hotel_td = td
+                    elif "hotel-meals" in c_str:
+                        meal_td = td
+                    elif "hotel-room" in c_str:
+                        room_td = td
+                    elif "transport" in c_str:
+                        transport_td = td
+                    elif any(k in c_str for k in ["arrival", "sortie", "checkin", "date"]):
+                        if not arrival_td:
+                            arrival_td = td
+                    elif "tour-nights" in c_str or "nights" in c_str:
+                        nights_td = td
+                    elif "tour" in c_str and "tour-nights" not in c_str:
+                        tour_td = td
+
+                    if not price_span:
+                        ps = td.find("span", class_="price")
+                        if ps:
+                            price_span = ps
+
                 raw_arrival = arrival_td.get_text(" ", strip=True) if arrival_td else ""
-                
                 date_match = re.search(r'(\d{2}\.\d{2}\.\d{4})', raw_arrival)
                 checkin_date = date_match.group(1) if date_match else ""
 
@@ -221,15 +262,12 @@ class SamoConnector(BaseTourConnector):
                     except Exception:
                         pass
 
-                tour_td = row.find("td", class_="tour")
                 tour_name = tour_td.get_text(" ", strip=True) if tour_td else ""
 
                 nights = row.get("data-nights") or row.get("data-hnights")
                 if not nights:
-                    nights_td = row.find("td", class_=lambda c: c and any(k in c for k in ["tour-nights", "nights"]))
                     nights = nights_td.get_text(strip=True) if nights_td else "7"
 
-                hotel_td = row.find("td", class_=lambda c: c and "link-hotel" in c)
                 hotel_text = hotel_td.get_text(" ", strip=True) if hotel_td else hotel_name_attr
 
                 stars_match = re.search(r'(\d\*|5\*\s*DELUXE|HV-\d|Boutique|Apartment)', hotel_text, re.I)
@@ -244,10 +282,8 @@ class SamoConnector(BaseTourConnector):
                 if not clean_hotel_name and hotel_name_attr:
                     clean_hotel_name = hotel_name_attr
 
-                meal_td = row.find("td", class_=lambda c: c and "hotel-meals" in c)
                 meal_type = meal_td.get_text(strip=True) if meal_td else ""
                 if not meal_type:
-                    tds = row.find_all("td")
                     if len(tds) > 6:
                         cand_meal = tds[6].get_text(strip=True)
                         if cand_meal in ["AI", "UAI", "BB", "HB", "FB", "RO"]:
@@ -255,10 +291,8 @@ class SamoConnector(BaseTourConnector):
                 if not meal_type:
                     meal_type = "AI"
 
-                room_td = row.find("td", class_=lambda c: c and "hotel-room" in c)
                 room_type = room_td.get_text(" / ", strip=True) if room_td else ""
                 if not room_type:
-                    tds = row.find_all("td")
                     if len(tds) > 7:
                         cand_room = tds[7].get_text(" / ", strip=True)
                         if cand_room:
@@ -266,7 +300,8 @@ class SamoConnector(BaseTourConnector):
                 if not room_type:
                     room_type = "Standard Room"
 
-                price_span = row.find("span", class_=lambda c: c and "price" in c)
+                if not price_span:
+                    price_span = row.find("span", class_=lambda c: c and "price" in c)
                 price_num = 0.0
                 price_formatted = "0"
                 if price_span:

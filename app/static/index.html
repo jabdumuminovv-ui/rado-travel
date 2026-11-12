@@ -1533,7 +1533,19 @@
       statusBar.classList.remove('hidden');
       spinner.classList.remove('hidden');
 
-      statusText.textContent = `Сканирование 19+ туроператоров (${payload.city_from} ➔ ${payload.country})...`;
+      statusText.textContent = `Запрос к туроператорам (${payload.city_from} ➔ ${payload.country})...`;
+
+      const searchSteps = [
+        `Опрос систем Kompas Tour, EasyBooking, Kazunion (${payload.city_from} ➔ ${payload.country})...`,
+        `Проверка доступности блоков мест на чартерах и регулярных рейсах...`,
+        `Сравнение оптовых контрактных цен туроператоров...`,
+        `Группировка отелей и расчет лучшей стоимости...`
+      ];
+      let stepIdx = 0;
+      const progressTimer = setInterval(() => {
+        stepIdx = (stepIdx + 1) % searchSteps.length;
+        if (statusText) statusText.textContent = searchSteps[stepIdx];
+      }, 2500);
 
       hotelsList.innerHTML = `
         <div class="bg-white rounded-2xl p-12 text-center border border-[#E8ECF3] card-shadow">
@@ -1553,6 +1565,8 @@
           },
           body: JSON.stringify(payload)
         });
+
+        clearInterval(progressTimer);
 
         if (response.status === 401 || response.status === 403) {
           const err = await response.json().catch(() => ({}));
@@ -1583,6 +1597,7 @@
         renderHotels(allHotelGroups);
 
       } catch (err) {
+        clearInterval(progressTimer);
         spinner.classList.add('hidden');
         searchBtn.disabled = false;
         searchBtn.classList.remove('opacity-70');
